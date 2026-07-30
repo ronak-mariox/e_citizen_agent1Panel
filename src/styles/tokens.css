@@ -44,6 +44,7 @@
   /* Icon badges */
   --color-icon-badge-amber: #fef3c6;
   --color-icon-badge-indigo: #e0e7ff;
+  --color-icon-badge-green: #dcfce7;
 
   /* On-panel text */
   --color-panel-text: #8ec5ff;
@@ -66,6 +67,16 @@
   --color-sidebar-active-bg: rgba(255, 255, 255, 0.15);
   --color-sidebar-active-bar: #38bdf8;
   --color-sidebar-rule: rgba(255, 255, 255, 0.1);
+
+  /* Settings screen */
+  --color-tile-soft: rgba(241, 245, 249, 0.4);
+  --color-tile-faint: rgba(241, 245, 249, 0.3);
+  --color-logout: #e7000b;
+  --color-placeholder-soft: rgba(15, 23, 42, 0.5);
+  --color-pill-on-bg: #dcfce7;
+  --color-pill-on-text: #008236;
+  --color-alert-border: #fee685;
+  --color-alert-body: #e17100;
 
   --sidebar-width: 239.997px;
   --topbar-height: 52.489px;

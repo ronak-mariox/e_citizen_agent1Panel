@@ -11,7 +11,8 @@ export function VerifyOtpPage() {
   // TODO: verify the code against the auth service once it is available.
   async function handleSubmit({ code }) {
     console.info('otp submitted', { identifier, code });
-    navigate('/dashboard', { replace: true });
+    // A verified code only unlocks the reset step — the agent signs in afterwards.
+    navigate('/reset-password', { replace: true, state: { identifier } });
   }
 
   async function handleResend() {

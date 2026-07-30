@@ -1,0 +1,369 @@
+/* Agent settings — Figma node 156:11593 (SettingsPage 173:12327).
+   The frame is authored at 0.75x, so the odd decimals are the exact canvas
+   values; keep them when matching the design. */
+
+.settings-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 18.75px;
+  padding-top: var(--space-6);
+}
+
+/* ------------------------------------------------------------- tab rail -- */
+
+.settings-nav {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 194.998px;
+}
+
+.settings-tab {
+  display: flex;
+  align-items: center;
+  gap: 9.375px;
+  width: 100%;
+  height: 37.486px;
+  padding: 9.375px var(--space-4);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  color: var(--color-dash-text);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+.settings-tab:hover {
+  background-color: var(--color-dash-chip);
+}
+
+.settings-tab__icon {
+  display: block;
+  flex: none;
+  width: var(--icon-size);
+  height: var(--icon-size);
+}
+
+.settings-tab--active,
+.settings-tab--active:hover {
+  color: #ffffff;
+  background-color: var(--color-brand);
+}
+
+/* The exported glyphs are single-stroke #64748b, so flattening to black and
+   inverting gives the white-on-brand active icon without a second asset. */
+.settings-tab--active .settings-tab__icon {
+  filter: brightness(0) invert(1);
+}
+
+.settings-nav__foot {
+  margin-top: var(--space-3);
+  padding-top: 8.201px;
+  border-top: var(--field-border) solid var(--color-dash-border);
+}
+
+.settings-tab--logout {
+  color: var(--color-logout);
+}
+
+/* ----------------------------------------------------------- panel card -- */
+
+.settings-card {
+  flex: 1;
+  min-width: 0;
+  padding: 23.201px;
+  background-color: var(--color-surface);
+  border: var(--field-border) solid var(--color-dash-border);
+  border-radius: var(--radius-badge);
+}
+
+.settings-card__title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 28.125px;
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+/* --------------------------------------------------------- identity row -- */
+
+.settings-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: 18.75px;
+  padding: var(--space-5);
+  background-color: var(--color-tile-soft);
+  border-radius: var(--radius-md);
+}
+
+.settings-identity__avatar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 52.489px;
+  height: 52.489px;
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: var(--leading-lg);
+  color: #ffffff;
+  background-color: var(--color-brand);
+  border-radius: var(--radius-pill);
+  font-variation-settings: 'opsz' 14;
+}
+
+.settings-identity__name {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: var(--space-6);
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.settings-identity__meta {
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-dash-text);
+  font-variation-settings: 'opsz' 9;
+}
+
+.settings-identity__photo {
+  margin-top: 4.91px;
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: var(--leading-xs);
+  color: var(--color-brand);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+.settings-identity__photo:hover {
+  text-decoration: underline;
+}
+
+/* -------------------------------------------------------------- form -- */
+
+/* The password panel is a single 360px column rather than the profile grid. */
+.settings-column {
+  width: 100%;
+  max-width: 360px;
+}
+
+.settings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18.75px;
+  padding: 18.75px 0;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14.992px;
+  padding: 18.75px 0;
+}
+
+.settings-field__label {
+  display: block;
+  padding-bottom: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: var(--leading-xs);
+  color: var(--color-dash-text);
+  font-variation-settings: 'opsz' 14;
+}
+
+.settings-field__input {
+  display: block;
+  width: 100%;
+  height: 35.121px;
+  padding: 8.201px 11.951px;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+  background-color: var(--color-surface);
+  border: var(--field-border) solid var(--color-dash-border);
+  border-radius: var(--space-4);
+  font-variation-settings: 'opsz' 9;
+}
+
+.settings-field__input::placeholder {
+  color: var(--color-placeholder-soft);
+}
+
+.settings-field__input:focus {
+  border-color: var(--color-brand);
+  outline: none;
+}
+
+.settings-field__error {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-danger);
+}
+
+.settings-save {
+  width: 123.891px;
+  height: 33.719px;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  color: #ffffff;
+  background-color: var(--color-brand);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+.settings-save--wide {
+  width: 145.268px;
+}
+
+.settings-save:hover {
+  background-color: var(--color-brand-hover);
+}
+
+.settings-save[disabled] {
+  cursor: default;
+  opacity: 0.7;
+}
+
+/* --------------------------------------------------- security settings -- */
+
+.settings-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: 18.75px;
+}
+
+.settings-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  background-color: var(--color-tile-faint);
+  border-radius: var(--radius-md);
+}
+
+.settings-option__title {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.settings-option__desc {
+  margin-top: 1.875px;
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-dash-text);
+  font-variation-settings: 'opsz' 9;
+}
+
+.settings-pill {
+  flex: none;
+  padding: var(--space-1) 9.375px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: var(--leading-xs);
+  white-space: nowrap;
+  border-radius: var(--radius-pill);
+  font-variation-settings: 'opsz' 14;
+}
+
+.settings-pill--on {
+  color: var(--color-pill-on-text);
+  background-color: var(--color-pill-on-bg);
+}
+
+.settings-pill--off {
+  color: var(--color-dash-text);
+  background-color: var(--color-dash-chip);
+}
+
+.settings-sessions {
+  margin-top: 18.75px;
+  padding: 15.701px;
+  background-color: var(--color-hint-bg);
+  border: var(--field-border) solid var(--color-alert-border);
+  border-radius: var(--radius-md);
+}
+
+.settings-sessions__title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: var(--leading-xs);
+  color: var(--color-hint-text);
+  font-variation-settings: 'opsz' 14;
+}
+
+.settings-sessions__summary {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-alert-body);
+  font-variation-settings: 'opsz' 9;
+}
+
+.settings-sessions__action {
+  margin-top: 7.49px;
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: var(--leading-xs);
+  color: var(--color-logout);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+.settings-sessions__action:hover {
+  text-decoration: underline;
+}
+
+/* ----------------------------------------------------------- responsive -- */
+
+@media (max-width: 900px) {
+  .settings-body {
+    flex-direction: column;
+  }
+
+  .settings-nav {
+    width: 100%;
+  }
+
+  .settings-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .settings-save,
+  .settings-save--wide {
+    width: 100%;
+  }
+}
