@@ -1,0 +1,120 @@
+/* Design tokens lifted from the Figma source (E-Citizen Mobile App, node 155:91).
+   The Figma frame is authored at 0.75x, so every dimension below is the exact
+   canvas value — keep them as-is when matching the design. */
+
+:root {
+  /* Brand */
+  --color-brand: #0052cc;
+  --color-brand-hover: #0046ad;
+  --color-brand-panel: #002a7a;
+  --color-brand-accent: #38bdf8;
+
+  /* Surfaces */
+  --color-page: #f8fafc;
+  --color-surface: #ffffff;
+  --color-field: #f9fafb;
+  --color-field-border: #e5e7eb;
+  --color-checkbox-border: #d1d5dc;
+
+  /* Text */
+  --color-heading: #101828;
+  --color-body: #0f172a;
+  --color-strong: #364153;
+  --color-label: #4a5565;
+  --color-muted: #6a7282;
+  --color-subtle: #99a1af;
+
+  /* Badge + demo-credentials callout */
+  --color-badge-bg: #dbeafe;
+  --color-note-bg: #eff6ff;
+  --color-note-border: #dbeafe;
+  --color-note-title: #1447e6;
+  --color-note-text: #155dfc;
+
+  /* Neutral callout (forgot-password screen) */
+  --color-info-bg: #f8fafc;
+  --color-info-border: #e2e8f0;
+  --color-info-text: #45556c;
+
+  /* Amber demo-hint callout (OTP screen) */
+  --color-hint-bg: #fffbeb;
+  --color-hint-border: #fef3c6;
+  --color-hint-text: #bb4d00;
+
+  /* Icon badges */
+  --color-icon-badge-amber: #fef3c6;
+  --color-icon-badge-indigo: #e0e7ff;
+
+  /* On-panel text */
+  --color-panel-text: #8ec5ff;
+  --color-panel-body: #bedbff;
+  --color-panel-footer: #51a2ff;
+  --color-panel-tile: rgba(255, 255, 255, 0.1);
+  --color-panel-rule: rgba(255, 255, 255, 0.1);
+
+  /* Feedback */
+  --color-danger: #d4351c;
+  --color-positive: #00a63e;
+  --color-negative: #fb2c36;
+
+  /* Dashboard chrome */
+  --color-dash-text: #64748b;
+  --color-dash-border: #e2e8f0;
+  --color-dash-chip: #f1f5f9;
+  --color-sidebar-link: #bedbff;
+  --color-sidebar-muted: #8ec5ff;
+  --color-sidebar-active-bg: rgba(255, 255, 255, 0.15);
+  --color-sidebar-active-bar: #38bdf8;
+  --color-sidebar-rule: rgba(255, 255, 255, 0.1);
+
+  --sidebar-width: 239.997px;
+  --topbar-height: 52.489px;
+
+  /* Typography */
+  --font-sans: 'DM Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: Menlo, Consolas, 'SF Mono', 'Liberation Mono', monospace;
+
+  --text-xs: 11.25px;
+  --text-sm: 13.125px;
+  --text-md: 16.875px;
+  --text-lg: 18.75px;
+  --text-xl: 22.5px;
+  --text-2xl: 28.125px;
+
+  --leading-xs: 15px;
+  --leading-sm: 18.75px;
+  --leading-md: 21.094px;
+  --leading-lg: 26.25px;
+  --leading-xl: 30px;
+  --leading-2xl: 38.672px;
+
+  /* Radii */
+  --radius-sm: 3.75px;
+  --radius-badge: 15px;
+  --radius-md: 15.25px;
+  --radius-lg: 22.5px;
+  --radius-pill: 999px;
+
+  /* Spacing */
+  --space-1: 3.75px;
+  --space-2: 5.625px;
+  --space-3: 7.5px;
+  --space-4: 11.25px;
+  --space-5: 15px;
+  --space-6: 22.5px;
+  --space-7: 30px;
+  --space-8: 37.5px;
+  --space-9: 45px;
+
+  /* Component metrics */
+  --card-width: 840px;
+  /* Figma pins the card to a 600px minimum; its real height is content-driven
+     (600 on the forgot-password screen, ~626.5 on login). */
+  --card-min-height: 600px;
+  --panel-width: 419.991px;
+  --field-height: 38.888px;
+  --field-border: 0.701px;
+  --icon-size: 14.992px;
+
+  --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
