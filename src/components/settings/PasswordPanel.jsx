@@ -1,14 +1,21 @@
 import { useId, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
+import { changePassword } from '../../api/auth.js';
+import { getErrorMessage } from '../../api/client.js';
 import { MIN_PASSWORD_LENGTH, PASSWORD_FIELDS } from '../../constants/settings.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const EMPTY_FORM = { current: '', next: '', confirm: '' };
 
 export function PasswordPanel() {
   const fieldPrefix = useId();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [values, setValues] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
 
   function handleChange(name, value) {
     setValues((current) => ({ ...current, [name]: value }));
@@ -32,9 +39,9 @@ export function PasswordPanel() {
     return next;
   }
 
-  // TODO: post to the agent password endpoint once the API is available.
   async function handleSubmit(event) {
     event.preventDefault();
+    setFormError('');
 
     const nextErrors = validate();
     setErrors(nextErrors);
@@ -44,9 +51,21 @@ export function PasswordPanel() {
     }
 
     setSaving(true);
-    console.info('password change requested');
-    setValues(EMPTY_FORM);
-    setSaving(false);
+
+    try {
+      await changePassword({ currentPassword: values.current, newPassword: values.next });
+      setValues(EMPTY_FORM);
+
+      // The backend revokes every refresh token on a password change, so this
+      // session is already dead — sign out cleanly rather than let the next
+      // call fail with a confusing 401.
+      await signOut();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      setFormError(getErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -90,6 +109,12 @@ export function PasswordPanel() {
           <button className="settings-save settings-save--wide" type="submit" disabled={saving}>
             {saving ? 'Updating…' : 'Update Password'}
           </button>
+
+          {formError && (
+            <p className="settings-field__error" role="alert">
+              {formError}
+            </p>
+          )}
         </form>
       </div>
     </section>

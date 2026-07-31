@@ -3,17 +3,17 @@ import { Link } from 'react-router-dom';
 
 import arrowLeft from '../assets/icons/arrow-left.svg';
 import keyIcon from '../assets/icons/key.svg';
-import mailIcon from '../assets/icons/mail.svg';
+import userIcon from '../assets/icons/user.svg';
 import sendIcon from '../assets/icons/send.svg';
 
 export function ForgotPasswordForm({ onSubmit }) {
   const fieldId = useId();
 
-  const [identifier, setIdentifier] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = identifier.trim().length > 0 && !submitting;
+  const canSubmit = employeeId.trim().length > 0 && !submitting;
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -26,7 +26,7 @@ export function ForgotPasswordForm({ onSubmit }) {
     setSubmitting(true);
 
     try {
-      await onSubmit?.({ identifier: identifier.trim() });
+      await onSubmit?.({ employeeId: employeeId.trim() });
     } catch (error) {
       setFormError(error?.message || 'Unable to send the code. Please try again.');
     } finally {
@@ -47,26 +47,27 @@ export function ForgotPasswordForm({ onSubmit }) {
         </div>
         <h1 className="auth-pane__title">Forgot password?</h1>
         <p className="auth-pane__subtitle">
-          Enter your registered email or Employee ID. We will send a one-time code.
+          Enter your Employee ID. We will send a one-time code to the mobile number on your
+          staff record.
         </p>
       </header>
 
       <form onSubmit={handleSubmit} noValidate>
         <div className="field">
           <label className="field__label" htmlFor={fieldId}>
-            Email or Employee ID
+            Employee ID
           </label>
           <div className="field__control">
-            <img className="field__icon" src={mailIcon} alt="" width="14.992" height="14.992" />
+            <img className="field__icon" src={userIcon} alt="" width="14.992" height="14.992" />
             <input
               id={fieldId}
               className="field__input"
               type="text"
-              name="identifier"
+              name="employeeId"
               autoComplete="username"
-              placeholder="ravi.kumar@ecitizen.gov.in"
-              value={identifier}
-              onChange={(event) => setIdentifier(event.target.value)}
+              placeholder="ECZ-A1-0042"
+              value={employeeId}
+              onChange={(event) => setEmployeeId(event.target.value)}
             />
           </div>
         </div>
@@ -89,7 +90,7 @@ export function ForgotPasswordForm({ onSubmit }) {
       </form>
 
       <div className="info-note">
-        <p className="info-note__title">Don&apos;t have access to your email?</p>
+        <p className="info-note__title">Don&apos;t have access to that number?</p>
         <p className="info-note__text">
           Contact your department supervisor or IT helpdesk at <strong>1800-111-222</strong>{' '}
           (toll-free).

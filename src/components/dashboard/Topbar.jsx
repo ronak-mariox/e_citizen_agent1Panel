@@ -4,6 +4,17 @@ import searchIcon from '../../assets/icons/dashboard/search.svg';
 import calendarIcon from '../../assets/icons/dashboard/calendar.svg';
 import bellIcon from '../../assets/icons/dashboard/bell.svg';
 import { AGENT } from '../../constants/dashboard.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+
+/** "Ravi Kumar" -> "RK"; falls back to one letter for a single-word name. */
+function initialsOf(name) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0].toUpperCase())
+    .join('');
+}
 
 const DATE_FORMAT = {
   weekday: 'short',
@@ -20,6 +31,13 @@ function formatToday() {
 }
 
 export function Topbar({ onToggleSidebar }) {
+  const { user } = useAuth();
+
+  // AGENT is the design placeholder; it only shows if the session somehow has
+  // no name on it, which the guards make unlikely.
+  const name = user?.fullName || AGENT.name;
+  const employeeId = user?.employeeId ?? AGENT.role;
+
   return (
     <header className="topbar">
       <button
@@ -47,10 +65,10 @@ export function Topbar({ onToggleSidebar }) {
         </button>
 
         <button className="topbar__user" type="button">
-          <span className="avatar">{AGENT.initials}</span>
+          <span className="avatar">{initialsOf(name)}</span>
           <span className="topbar__identity">
-            <span className="topbar__username">{AGENT.name}</span>
-            <span className="topbar__role">{AGENT.role}</span>
+            <span className="topbar__username">{name}</span>
+            <span className="topbar__role">{employeeId}</span>
           </span>
           <img src={chevronDown} alt="" width="11.247" height="11.247" />
         </button>

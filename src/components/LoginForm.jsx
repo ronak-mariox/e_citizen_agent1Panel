@@ -169,13 +169,14 @@ export function LoginForm({ onSubmit }) {
         )}
       </form>
 
+      {/* Matches the account created by backend/src/scripts/seed_agents.js. */}
       <div className="demo-note">
-        <p className="demo-note__title">Demo credentials</p>
+        <p className="demo-note__title">Seeded test account</p>
         <p className="demo-note__row">
           Employee ID: <code>ECZ-A1-0042</code>
         </p>
         <p className="demo-note__row">
-          Password: <code>any 4+ characters</code>
+          Password: <code>Agent@12345</code>
         </p>
       </div>
 

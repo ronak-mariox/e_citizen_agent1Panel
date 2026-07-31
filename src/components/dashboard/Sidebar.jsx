@@ -3,9 +3,18 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import navLogo from '../../assets/icons/dashboard/nav-logo.svg';
 import navLogout from '../../assets/icons/dashboard/nav-logout.svg';
 import { NAV_ITEMS } from '../../constants/dashboard.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 export function Sidebar() {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  // Revokes the refresh token server-side and clears the cookie, so the
+  // session is gone rather than just hidden.
+  async function handleLogout() {
+    await signOut();
+    navigate('/login', { replace: true });
+  }
 
   return (
     <aside className="sidebar">
@@ -35,7 +44,7 @@ export function Sidebar() {
       </nav>
 
       <div className="sidebar__foot">
-        <button className="sidebar__logout" type="button" onClick={() => navigate('/login')}>
+        <button className="sidebar__logout" type="button" onClick={handleLogout}>
           <img src={navLogout} alt="" width="14.992" height="14.992" />
           Logout
         </button>

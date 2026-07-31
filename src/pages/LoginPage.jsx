@@ -1,28 +1,24 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import AuthLayout from '../layouts/AuthLayout.jsx';
 import LoginForm from '../components/LoginForm.jsx';
-// import axios from 'axios';
+import { useAuth } from '../context/AuthContext.jsx';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn } = useAuth();
 
-  // TODO: replace with the real auth call once the agent auth service is available.
-  async function handleSubmit(credentials) {
-    console.log(credentials)
-    console.info('login submitted', { employeeId: credentials.employeeId });
-    // try {
-    //   const response = await axios.post('', credentials);
-    //   console.log(response.data);
-    //   if (response.ok) {
-    //     navigate('/dashboard', { replace: true });
-    //   }
-    // }
-    // catch (error) {
-    //   console.log(error)
-    // }
-            navigate('/dashboard', { replace: true });
+  // Set by ProtectedRoute when a guard bounced the agent here, so a re-login
+  // returns them to the page they actually wanted.
+  const from = location.state?.from ?? '/dashboard';
 
+  async function handleSubmit({ employeeId, password }) {
+    // signIn stores the session and throws an Error with a readable message;
+    // LoginForm catches it and shows it above the submit button.
+    await signIn({ employeeId, password });
+
+    navigate(from, { replace: true });
   }
 
   return (

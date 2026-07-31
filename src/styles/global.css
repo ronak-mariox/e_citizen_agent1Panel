@@ -44,3 +44,12 @@ img {
   outline: 2px solid var(--color-brand);
   outline-offset: 2px;
 }
+
+/* Shown by the route guards while a stored session is being confirmed against
+   the server. Brief, but it has to occupy the page rather than flash empty. */
+.route-loading {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  color: var(--color-text-muted, #6b7280);
+}
