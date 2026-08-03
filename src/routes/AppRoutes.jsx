@@ -5,6 +5,8 @@ import ForgotPasswordPage from '../pages/ForgotPasswordPage.jsx';
 import VerifyOtpPage from '../pages/VerifyOtpPage.jsx';
 import ResetPasswordPage from '../pages/ResetPasswordPage.jsx';
 import DashboardPage from '../pages/DashboardPage.jsx';
+import AssignedQueuePage from '../pages/AssignedQueuePage.jsx';
+import ApplicationDetailsPage from '../pages/ApplicationDetailsPage.jsx';
 import SettingsPage from '../pages/SettingsPage.jsx';
 import SectionPlaceholderPage from '../pages/SectionPlaceholderPage.jsx';
 import ProtectedRoute, { PublicOnlyRoute } from './ProtectedRoute.jsx';
@@ -27,6 +29,8 @@ export function AppRoutes() {
       {/* Everything past sign-in. */}
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/assigned-queue" element={<AssignedQueuePage />} />
+        <Route path="/assigned-queue/:applicationId" element={<ApplicationDetailsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         {PENDING_SECTIONS.map((item) => (
           <Route key={item.to} path={item.to} element={<SectionPlaceholderPage />} />

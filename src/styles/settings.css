@@ -119,6 +119,32 @@
   font-variation-settings: 'opsz' 14;
 }
 
+.settings-identity__photo-preview {
+  flex: none;
+  width: 52.489px;
+  height: 52.489px;
+  object-fit: cover;
+  border-radius: var(--radius-pill);
+}
+
+/* The real input is hidden; the "Change Photo" button proxies the click. */
+.settings-identity__file {
+  display: none;
+}
+
+.settings-identity__actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.settings-identity__error {
+  margin-top: 4.91px;
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-danger);
+  font-variation-settings: 'opsz' 9;
+}
+
 .settings-identity__name {
   font-size: 15px;
   font-weight: 600;

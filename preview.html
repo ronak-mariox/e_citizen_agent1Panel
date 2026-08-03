@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="UTF-8" /><title>preview</title></head>
+  <body><div id="root"></div><pre id="m"></pre><script type="module" src="/src/preview-main.jsx"></script>
+  <script>
+    setTimeout(() => {
+      const q = (s) => document.querySelector(s);
+      const w = (s) => { const e = q(s); return e ? Math.round(e.getBoundingClientRect().width * 100) / 100 : 'n/a'; };
+      const items = [...document.querySelectorAll('.app-hero__meta-item')]
+        .map((e) => Math.round(e.getBoundingClientRect().width * 100) / 100).join(', ');
+      document.getElementById('m').textContent =
+        'MEASURE hero=' + w('.app-hero') + ' body=' + w('.app-hero__body') +
+        ' actions=' + w('.app-hero__actions') + ' meta=' + w('.app-hero__meta') +
+        ' items=[' + items + ']';
+    }, 2500);
+  </script>
+  </body>
+</html>
