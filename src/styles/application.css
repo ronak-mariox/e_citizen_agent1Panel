@@ -87,6 +87,10 @@
   background-color: var(--color-brand);
 }
 
+.app-stepper__index--complete {
+  background-color: #00c950;
+}
+
 .app-stepper__label {
   font-size: var(--text-xs);
   font-weight: 500;
@@ -100,12 +104,20 @@
   color: var(--color-brand);
 }
 
+.app-stepper__label--complete {
+  color: var(--color-positive);
+}
+
 .app-stepper__line {
   flex: none;
   width: 29.995px;
   height: 0.997px;
   margin: 0 var(--space-3);
   background-color: var(--color-dash-border);
+}
+
+.app-stepper__line--complete {
+  background-color: #05df72;
 }
 
 .app-status-badge {
@@ -124,11 +136,65 @@
   font-variation-settings: 'opsz' 14;
 }
 
+.app-status-badge--started {
+  color: #432dd7;
+  background-color: #eef2ff;
+}
+
 .app-status-badge__dot {
   width: 5.618px;
   height: 5.618px;
   background-color: #2b7fff;
   border-radius: var(--radius-pill);
+}
+
+.app-status-badge--started .app-status-badge__dot {
+  background-color: #615fff;
+}
+
+.app-status-badge--approved {
+  color: var(--color-pill-on-text);
+  background-color: #f0fdf4;
+}
+
+.app-status-badge--approved .app-status-badge__dot {
+  background-color: #00c950;
+}
+
+.app-status-badge--forwarded {
+  color: #00786f;
+  background-color: #f0fdfa;
+}
+
+.app-status-badge--forwarded .app-status-badge__dot {
+  background-color: #00bba7;
+}
+
+.app-status-badge--waiting {
+  color: #ca3500;
+  background-color: #fff7ed;
+}
+
+.app-status-badge--waiting .app-status-badge__dot {
+  background-color: #ff6900;
+}
+
+.app-status-badge--query {
+  color: #8200db;
+  background-color: #faf5ff;
+}
+
+.app-status-badge--query .app-status-badge__dot {
+  background-color: #ad46ff;
+}
+
+.app-status-badge--rejected {
+  color: #c10007;
+  background-color: #fef2f2;
+}
+
+.app-status-badge--rejected .app-status-badge__dot {
+  background-color: #fb2c36;
 }
 
 /* ----------------------------------------------------------------- hero -- */
@@ -530,28 +596,77 @@
   background-color: #ffe2e2;
 }
 
-/* ---------------------------------------- timeline / notes / messages -- */
+/* ------------------------------------------------------------- timeline -- */
 
-.app-entry-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+/* The rail sits 30px from the panel edge, so the panel opens up on the left to
+   41.25px and the dots hang back out of the card by 22.49px. */
+.app-tabs__panel--timeline {
+  padding-left: 41.25px;
 }
 
-.app-entry {
-  padding: 15.701px;
-  border: var(--field-border) solid var(--color-dash-border);
+.app-timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18.75px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Drawn by the list rather than per entry, so the line is continuous whatever
+   the entry count — it runs from just above the first dot to inside the last
+   card, as the design has it. */
+.app-timeline::before {
+  content: '';
+  position: absolute;
+  top: 3.74px;
+  bottom: 28.05px;
+  left: -11.25px;
+  width: 0.997px;
+  background-color: var(--color-dash-border);
+}
+
+.app-timeline__item {
+  position: relative;
+}
+
+.app-timeline__dot {
+  position: absolute;
+  top: 3.75px;
+  left: -22.49px;
+  width: 14.992px;
+  height: 14.992px;
+  border: 1.402px solid var(--color-surface);
+  border-radius: var(--radius-pill);
+}
+
+.app-timeline__dot--completed {
+  background-color: #00c950;
+}
+
+.app-timeline__dot--active {
+  background-color: var(--color-brand);
+}
+
+.app-timeline__dot--pending {
+  background-color: var(--color-dash-chip);
+}
+
+.app-timeline__card {
+  padding: 13.125px;
+  background-color: rgba(241, 245, 249, 0.4);
   border-radius: var(--radius-md);
 }
 
-.app-entry__head {
+.app-timeline__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
 }
 
-.app-entry__title {
+.app-timeline__title {
   font-size: var(--text-sm);
   font-weight: 600;
   line-height: var(--leading-sm);
@@ -559,23 +674,262 @@
   font-variation-settings: 'opsz' 14;
 }
 
-.app-entry__time {
+.app-timeline__status {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  padding: 1.875px var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: var(--leading-xs);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-timeline__status--completed {
+  color: var(--color-pill-on-text);
+  background-color: var(--color-pill-on-bg);
+}
+
+.app-timeline__status--active {
+  color: var(--color-note-title);
+  background-color: var(--color-badge-bg);
+}
+
+.app-timeline__status--pending {
+  color: var(--color-dash-text);
+  background-color: var(--color-dash-chip);
+}
+
+.app-timeline__meta {
+  margin-top: var(--space-2);
   font-size: var(--text-xs);
   line-height: var(--leading-xs);
   color: var(--color-dash-text);
 }
 
-.app-entry__detail {
-  margin-top: 1.875px;
+.app-timeline__detail {
+  margin-top: var(--space-1);
   font-size: var(--text-xs);
   line-height: var(--leading-xs);
   color: var(--color-dash-text);
 }
 
-.app-entry-empty {
+/* ---------------------------------------------------------------- notes -- */
+
+.app-notes {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-note {
+  padding: var(--space-5);
+  background-color: rgba(241, 245, 249, 0.3);
+  border-radius: var(--radius-md);
+}
+
+.app-note + .app-note {
+  margin-top: var(--space-4);
+}
+
+.app-note__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-note__avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 26.239px;
+  height: 26.239px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: var(--leading-xs);
+  color: #ffffff;
+  background-color: var(--color-brand);
+  border-radius: var(--radius-pill);
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-note__author {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: var(--leading-xs);
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-note__time {
   font-size: var(--text-xs);
   line-height: var(--leading-xs);
   color: var(--color-dash-text);
+}
+
+.app-note__text {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+}
+
+.app-note-composer {
+  margin-top: var(--space-5);
+}
+
+.app-note-composer__input {
+  display: block;
+  width: 100%;
+  min-height: 90px;
+  padding: 11.951px;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+  background-color: var(--color-surface);
+  border: var(--field-border) solid var(--color-dash-border);
+  border-radius: var(--radius-md);
+  resize: vertical;
+}
+
+.app-note-composer__input::placeholder {
+  color: var(--color-placeholder-soft);
+}
+
+.app-note-composer__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-3);
+}
+
+.app-note-composer__attach {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  background: transparent;
+  border: 0;
+  border-radius: 11.25px;
+  cursor: pointer;
+}
+
+.app-note-composer__attach:hover {
+  background-color: var(--color-dash-chip);
+}
+
+.app-note-composer__save {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  color: #ffffff;
+  background-color: var(--color-brand);
+  border: 0;
+  border-radius: 11.25px;
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+/* The canvas draws this button at 40% — its resting state is an empty note. */
+.app-note-composer__save:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* -------------------------------------------------------- communication -- */
+
+.app-channels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Each row owns its hue; the icon and arrow assets ship already tinted to it. */
+.app-channel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: 15.701px;
+  font-family: inherit;
+  text-align: left;
+  border: var(--field-border) solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.app-channel--call {
+  color: var(--color-pill-on-text);
+  background-color: #f0fdf4;
+  border-color: #b9f8cf;
+}
+
+.app-channel--whatsapp {
+  color: #007a55;
+  background-color: #ecfdf5;
+  border-color: #a4f4cf;
+}
+
+.app-channel--email {
+  color: var(--color-note-title);
+  background-color: var(--color-note-bg);
+  border-color: #bedbff;
+}
+
+.app-channel--reminder {
+  color: #8200db;
+  background-color: #faf5ff;
+  border-color: #e9d4ff;
+}
+
+.app-channel__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 33.741px;
+  height: 33.741px;
+  background-color: var(--color-surface);
+  border-radius: 11.25px;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.1)) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+}
+
+.app-channel__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-channel__title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: var(--leading-sm);
+  color: inherit;
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-channel__detail {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: var(--leading-xs);
+  color: inherit;
+  opacity: 0.7;
+  font-variation-settings: 'opsz' 14;
+}
+
+/* Pinned to the top of the row, as the design aligns it. */
+.app-channel__arrow {
+  flex: none;
+  align-self: flex-start;
 }
 
 /* --------------------------------------------------------- side column -- */
@@ -711,7 +1065,8 @@
 }
 
 .app-primary-button,
-.app-secondary-button {
+.app-secondary-button,
+.app-muted-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -741,6 +1096,207 @@
   background-color: transparent;
   border: var(--field-border) solid var(--color-dash-border);
 }
+
+/* ------------------------------------------- decision, once verification is
+   under way. The stack tightens from 11.25px to 9.375px between buttons. -- */
+
+.app-alert--review {
+  color: #432dd7;
+  background-color: #eef2ff;
+  border-color: #c6d2ff;
+}
+
+.app-decision-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: 9.375px;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: var(--leading-sm);
+  color: #ffffff;
+  border: var(--field-border) solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+/* The one tinted button in the stack — it navigates rather than decides. */
+.app-decision-button--documents {
+  padding: 8.201px var(--field-border);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: var(--leading-xs);
+  color: #432dd7;
+  background-color: #eef2ff;
+  border-color: #a3b3ff;
+}
+
+.app-decision-button--approve {
+  height: 37.486px;
+  background-color: var(--color-positive);
+}
+
+.app-decision-button--query {
+  height: 37.486px;
+  background-color: #fe9a00;
+}
+
+.app-decision-button--reject {
+  height: 37.486px;
+  background-color: var(--color-logout);
+}
+
+.app-secondary-button--tight {
+  margin-top: 9.375px;
+}
+
+.app-decision-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: 9.375px;
+  padding: var(--space-4);
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-note-title);
+  background-color: var(--color-note-bg);
+  border-radius: 11.25px;
+}
+
+.app-decision-note img {
+  flex: none;
+  margin-top: 1.875px;
+}
+
+/* --------------------------------------- decision, once it has an outcome.
+   The card swaps its whole stack for a tinted panel plus whatever routes are
+   left. Declared after .app-secondary-button so the modifiers below win. -- */
+
+.app-outcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: var(--space-5);
+  padding: 15.701px;
+  text-align: center;
+  border: var(--field-border) solid transparent;
+  border-radius: var(--radius-md);
+}
+
+.app-outcome__title {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: var(--leading-sm);
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-outcome__text {
+  margin-top: 3.75px;
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+}
+
+.app-outcome--approved {
+  background-color: #f0fdf4;
+  border-color: #b9f8cf;
+}
+
+.app-outcome--approved .app-outcome__title {
+  color: var(--color-pill-on-text);
+}
+
+.app-outcome--approved .app-outcome__text {
+  color: var(--color-positive);
+}
+
+/* Rejected: the only outcome panel that is not tinted to its verdict. The file
+   is closed, so the tile goes neutral and the red is spent on the headline
+   alone — nothing here is a state to act on. */
+.app-outcome--rejected {
+  background-color: var(--color-tile-soft);
+  border-color: var(--color-dash-border);
+}
+
+.app-outcome--rejected .app-outcome__title {
+  color: #c10007;
+}
+
+.app-outcome--rejected .app-outcome__text {
+  color: var(--color-dash-text);
+}
+
+/* Query raised: the file is parked with the customer, so the panel goes amber
+   and the only route left is nudging them again. */
+.app-outcome--waiting {
+  background-color: #fff7ed;
+  border-color: #ffd6a8;
+}
+
+.app-outcome--waiting .app-outcome__title {
+  color: #ca3500;
+}
+
+.app-outcome--waiting .app-outcome__text {
+  color: #f54900;
+}
+
+/* A query the agent just sent, as opposed to the amber panel a row that
+   arrived already parked with the customer shows. */
+.app-outcome--query {
+  background-color: #faf5ff;
+  border-color: #e9d4ff;
+}
+
+.app-outcome--query .app-outcome__title {
+  color: #8200db;
+}
+
+.app-outcome--query .app-outcome__text {
+  color: #9810fa;
+}
+
+.app-secondary-button--query {
+  color: #8200db;
+  background-color: #faf5ff;
+  border-color: #dab2ff;
+}
+
+.app-primary-button--reject {
+  background-color: var(--color-logout);
+}
+
+.app-primary-button--payment {
+  background-color: #009689;
+}
+
+/* Once payment is away the first slot stops being an action and only reports
+   the state, and Agent 2 takes over as the live route below it. */
+.app-primary-button--done {
+  background-color: var(--color-pill-on-text);
+  cursor: default;
+}
+
+.app-primary-button--agent2 {
+  color: var(--color-dash-border);
+  background-color: #009689;
+}
+
+/* Agent 2 is where the file has already gone, so the design keeps the route
+   on screen but greys it out — border and label share the one grey. */
+.app-muted-button {
+  height: 37.486px;
+  font-weight: 600;
+  color: var(--color-dash-border);
+  background-color: transparent;
+  border: 1px solid var(--color-dash-border);
+  cursor: default;
+}
+
 
 .app-quick-info {
   display: flex;
@@ -820,4 +1376,320 @@
   .app-doc {
     flex-wrap: wrap;
   }
+}
+
+/* ---------------------------------------------------------------- modal -- */
+
+.app-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.app-modal__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 480px;
+  padding: var(--space-6);
+  text-align: center;
+  background-color: var(--color-surface);
+  border: var(--field-border) solid var(--color-dash-border);
+  border-radius: 15px;
+  box-shadow: var(--shadow-card);
+}
+
+.app-modal__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 59.991px;
+  height: 59.991px;
+  background-color: var(--color-pill-on-bg);
+  border-radius: var(--radius-pill);
+}
+
+/* The badge is stained by what the dialog does, not by which dialog it is. */
+.app-modal__badge--reject {
+  background-color: #ffe2e2;
+}
+
+.app-modal__title {
+  margin: var(--space-5) 0 0;
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 26.25px;
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-modal__text {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  color: var(--color-dash-text);
+}
+
+.app-modal__text--tight {
+  margin-top: var(--space-1);
+}
+
+.app-modal__text strong {
+  font-weight: 600;
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-modal__actions {
+  display: flex;
+  gap: var(--space-4);
+  width: 100%;
+  margin-top: var(--space-6);
+}
+
+/* A field already opens its own gap, so the footer closes up behind one. */
+.app-modal__field + .app-modal__actions {
+  margin-top: var(--space-5);
+}
+
+.app-modal__button {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-width: 0;
+  height: 38.888px;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  border: var(--field-border) solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-modal__button--cancel {
+  font-weight: 500;
+  color: var(--color-body);
+  background-color: transparent;
+  border-color: var(--color-dash-border);
+}
+
+.app-modal__button--confirm {
+  font-weight: 600;
+  color: #ffffff;
+  background-color: var(--color-positive);
+}
+
+.app-modal__button--reject {
+  background-color: var(--color-logout);
+}
+
+/* A form field inside a centred confirmation: the card centres its copy, this
+   sets itself straight again so the label sits over the control. */
+.app-modal__field {
+  width: 100%;
+  margin-top: var(--space-5);
+  text-align: left;
+}
+
+.app-modal__button--send {
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #fe9a00;
+}
+
+/* ------------------------------------------------------- raise a query. The
+   one dialog that is a form rather than a confirmation, so the card runs
+   left-aligned and full-width instead of centred. -- */
+
+.app-modal__card--form {
+  align-items: stretch;
+  text-align: left;
+}
+
+.app-query__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.app-query__title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 26.25px;
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-query__close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  background: transparent;
+  border: 0;
+  border-radius: 11.25px;
+  cursor: pointer;
+}
+
+.app-query__field {
+  margin-top: var(--space-5);
+}
+
+.app-query__field:first-of-type {
+  margin-top: 18.75px;
+}
+
+.app-query__label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-query__select,
+.app-query__textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+  background-color: var(--color-surface);
+  border: var(--field-border) solid var(--color-dash-border);
+  border-radius: 11.25px;
+  outline: none;
+}
+
+.app-query__select {
+  height: 35.307px;
+  padding: 0 11.951px;
+}
+
+.app-query__textarea {
+  min-height: 90px;
+  padding: 8.201px 11.951px;
+  resize: vertical;
+}
+
+.app-query__textarea::placeholder {
+  color: rgba(15, 23, 42, 0.5);
+}
+
+.app-query__choices {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.app-query__choice {
+  flex: 1;
+  min-width: 0;
+  padding: 6.326px var(--field-border);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+  background-color: transparent;
+  border: var(--field-border) solid var(--color-dash-border);
+  border-radius: 11.25px;
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-query__choice--active {
+  color: #ffffff;
+  background-color: var(--color-brand);
+  border-color: var(--color-brand);
+}
+
+.app-query__upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 16.402px;
+  font-family: inherit;
+  background: transparent;
+  border: 1.402px dashed var(--color-dash-border);
+  border-radius: 11.25px;
+  cursor: pointer;
+}
+
+.app-query__upload span {
+  margin-top: 3.75px;
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-dash-text);
+}
+
+.app-query__notify {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  background-color: rgba(241, 245, 249, 0.5);
+  border-radius: 11.25px;
+}
+
+.app-query__notify-title {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-query__notify-detail {
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-dash-text);
+}
+
+/* The knob travels the track's width less its own, so both ends inset by the
+   same 1.87px the design draws. */
+.app-query__toggle {
+  position: relative;
+  flex: none;
+  width: 37.497px;
+  height: 22.494px;
+  padding: 0;
+  background-color: var(--color-dash-border);
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.app-query__toggle--on {
+  background-color: var(--color-brand);
+}
+
+.app-query__toggle::after {
+  content: '';
+  position: absolute;
+  top: 1.87px;
+  left: 1.87px;
+  width: 18.749px;
+  height: 18.749px;
+  background-color: #ffffff;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.app-query__toggle--on::after {
+  left: 16.88px;
 }

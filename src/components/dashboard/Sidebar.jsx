@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 
+import LogoutDialog from '../LogoutDialog.jsx';
 import navLogo from '../../assets/icons/dashboard/nav-logo.svg';
 import navLogout from '../../assets/icons/dashboard/nav-logout.svg';
 import { NAV_ITEMS } from '../../constants/dashboard.js';
@@ -8,6 +10,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 export function Sidebar() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
 
   // Revokes the refresh token server-side and clears the cookie, so the
   // session is gone rather than just hidden.
@@ -44,11 +47,19 @@ export function Sidebar() {
       </nav>
 
       <div className="sidebar__foot">
-        <button className="sidebar__logout" type="button" onClick={handleLogout}>
+        <button
+          className="sidebar__logout"
+          type="button"
+          onClick={() => setConfirmingLogout(true)}
+        >
           <img src={navLogout} alt="" width="14.992" height="14.992" />
           Logout
         </button>
       </div>
+
+      {confirmingLogout && (
+        <LogoutDialog onCancel={() => setConfirmingLogout(false)} onConfirm={handleLogout} />
+      )}
     </aside>
   );
 }

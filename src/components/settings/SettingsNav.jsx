@@ -1,6 +1,11 @@
+import { useState } from 'react';
+
+import LogoutDialog from '../LogoutDialog.jsx';
 import { LOGOUT_ICON, SETTINGS_TABS } from '../../constants/settings.js';
 
 export function SettingsNav({ activeTab, onSelect, onLogout }) {
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
+
   return (
     <div className="settings-nav">
       {SETTINGS_TABS.map((tab) => {
@@ -27,7 +32,11 @@ export function SettingsNav({ activeTab, onSelect, onLogout }) {
       })}
 
       <div className="settings-nav__foot">
-        <button className="settings-tab settings-tab--logout" type="button" onClick={onLogout}>
+        <button
+          className="settings-tab settings-tab--logout"
+          type="button"
+          onClick={() => setConfirmingLogout(true)}
+        >
           <img
             className="settings-tab__icon"
             src={LOGOUT_ICON}
@@ -38,6 +47,10 @@ export function SettingsNav({ activeTab, onSelect, onLogout }) {
           Logout
         </button>
       </div>
+
+      {confirmingLogout && (
+        <LogoutDialog onCancel={() => setConfirmingLogout(false)} onConfirm={onLogout} />
+      )}
     </div>
   );
 }

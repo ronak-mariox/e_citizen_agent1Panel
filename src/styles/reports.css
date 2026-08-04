@@ -1,0 +1,308 @@
+/* Reports & analytics — Figma node 155:6701.
+   The frame is authored at 0.75x, so the odd decimals are the exact canvas
+   values; keep them when matching the design. */
+
+/* Section spacing is uneven in the design — 18.75px down to the KPI row, then
+   22.5px between the chart rows — so the sections carry their own margins
+   rather than the page carrying one gap. */
+.rp-kpis {
+  margin-top: 18.75px;
+}
+
+.rp-row {
+  margin-top: 22.5px;
+}
+
+/* --------------------------------------------------------------- header -- */
+
+.rp-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Drawn as an empty field, so it renders as one until its options land. */
+.rp-period {
+  width: 98.89px;
+  height: 35.307px;
+  background-color: var(--color-surface);
+  border: var(--field-border) solid var(--color-dash-border);
+  border-radius: var(--radius-md);
+}
+
+.rp-export {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8.201px 11.951px;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+  background-color: transparent;
+  border: var(--field-border) solid var(--color-dash-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+/* ----------------------------------------------------------------- kpis -- */
+
+.rp-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14.994px;
+}
+
+/* Each tile keeps the neutral label and colours only its reading. */
+.rp-kpi {
+  padding: 15.701px;
+  background-color: var(--color-surface);
+  border: var(--field-border) solid transparent;
+  border-radius: var(--radius-md);
+}
+
+.rp-kpi--time {
+  border-color: #bedbff;
+}
+
+.rp-kpi--approval {
+  background-color: #f0fdf4;
+  border-color: #b9f8cf;
+}
+
+.rp-kpi--query {
+  border-color: var(--color-alert-border);
+}
+
+.rp-kpi--rejection {
+  background-color: #fef2f2;
+  border-color: #ffc9c9;
+}
+
+.rp-kpi__top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.rp-kpi__top img {
+  flex: none;
+}
+
+.rp-kpi__label {
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-dash-text);
+}
+
+.rp-kpi__value {
+  margin-top: var(--space-3);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: var(--leading-xl);
+  font-variation-settings: 'opsz' 14;
+}
+
+.rp-kpi--time .rp-kpi__value {
+  color: var(--color-note-text);
+}
+
+.rp-kpi--approval .rp-kpi__value {
+  color: var(--color-positive);
+}
+
+.rp-kpi--query .rp-kpi__value {
+  color: var(--color-alert-body);
+}
+
+.rp-kpi--rejection .rp-kpi__value {
+  color: var(--color-logout);
+}
+
+/* ---------------------------------------------------------------- cards -- */
+
+.rp-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14.994px;
+}
+
+.rp-card {
+  padding: 19.451px;
+  background-color: var(--color-surface);
+  border: var(--field-border) solid var(--color-dash-border);
+  border-radius: 15px;
+}
+
+.rp-card__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 28.125px;
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.rp-card__note {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-dash-text);
+}
+
+/* --------------------------------------------------------------- charts -- */
+
+.rp-chart {
+  margin-top: var(--space-5);
+}
+
+.rp-chart__plot {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.rp-chart__grid {
+  stroke: var(--color-dash-border);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.rp-chart__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rp-chart__dot {
+  stroke: #ffffff;
+  stroke-width: 1;
+}
+
+/* The axis type is Inter 11 in the export, not the page's DM Sans. */
+.rp-chart__tick {
+  font-family: Inter, var(--font-sans);
+  font-size: 11px;
+  fill: #666666;
+}
+
+.rp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-6);
+  margin: 12.5px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rp-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3.997px;
+  font-size: 15px;
+  line-height: 22.5px;
+  font-variation-settings: 'opsz' 9;
+}
+
+.rp-legend__swatch {
+  width: 13.996px;
+  height: 13.996px;
+  border-radius: 1px;
+}
+
+.rp-legend__mark {
+  width: 13.996px;
+  height: 13.996px;
+  overflow: visible;
+}
+
+/* ---------------------------------------------------------- departments -- */
+
+.rp-depts {
+  display: flex;
+  flex-direction: column;
+  gap: 11.25px;
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rp-dept__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.rp-dept__label {
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+}
+
+.rp-dept__value {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.rp-dept__track {
+  display: block;
+  height: 7.491px;
+  margin-top: var(--space-2);
+  background-color: var(--color-dash-chip);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.rp-dept__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+}
+
+/* --------------------------------------------------------------- donut -- */
+
+.rp-donut-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 179.995px;
+  margin-top: var(--space-5);
+}
+
+.rp-donut {
+  width: 159.995px;
+  height: 159.995px;
+}
+
+/* ----------------------------------------------------------- responsive -- */
+
+@media (max-width: 1400px) {
+  .rp-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .rp-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .rp-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rp-actions {
+    flex-wrap: wrap;
+  }
+}

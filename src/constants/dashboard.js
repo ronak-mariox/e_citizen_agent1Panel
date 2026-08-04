@@ -4,6 +4,7 @@ import navPending from '../assets/icons/dashboard/nav-pending.svg';
 import navWaiting from '../assets/icons/dashboard/nav-waiting.svg';
 import navForwarded from '../assets/icons/dashboard/nav-forwarded.svg';
 import navCompleted from '../assets/icons/dashboard/nav-completed.svg';
+import navNotifications from '../assets/icons/dashboard/nav-notifications.svg';
 import navReports from '../assets/icons/dashboard/nav-reports.svg';
 import navSettings from '../assets/icons/dashboard/nav-settings.svg';
 
@@ -22,6 +23,7 @@ export const NAV_ITEMS = [
   { label: 'Waiting Customer', icon: navWaiting, to: '/waiting-customer' },
   { label: 'Forwarded to Agent 2', icon: navForwarded, to: '/forwarded' },
   { label: 'Completed Applications', icon: navCompleted, to: '/completed' },
+  { label: 'Notifications', icon: navNotifications, to: '/notifications' },
   { label: 'Reports', icon: navReports, to: '/reports' },
   { label: 'Settings', icon: navSettings, to: '/settings' },
 ];

@@ -353,6 +353,108 @@
   cursor: pointer;
 }
 
+/* -------------------------------------------------------- logout dialog -- */
+
+.logout-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.logout-modal__card {
+  width: 359.989px;
+  max-width: 100%;
+  max-height: 100%;
+  padding: 23.201px;
+  overflow-y: auto;
+  text-align: center;
+  background-color: var(--color-surface);
+  border: var(--field-border) solid var(--color-dash-border);
+  border-radius: var(--radius-badge);
+  box-shadow: 0 25px 25px rgba(0, 0, 0, 0.25);
+}
+
+/* Rose and square-cornered: this ends the session rather than finishing work,
+   so it does not borrow the round green badge the case confirmations use. */
+.logout-modal__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52.489px;
+  height: 52.489px;
+  background-color: #ffe2e2;
+  border-radius: var(--radius-badge);
+}
+
+.logout-modal__badge img {
+  display: block;
+  width: 26.239px;
+  height: 26.239px;
+}
+
+.logout-modal__title {
+  margin-top: var(--space-5);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: var(--leading-lg);
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.logout-modal__body {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  line-height: 18.75px;
+  color: var(--color-dash-text);
+}
+
+.logout-modal__actions {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.logout-modal__cancel,
+.logout-modal__confirm {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: 18.75px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+.logout-modal__cancel {
+  padding: 10.076px 0.701px;
+  font-weight: 500;
+  color: var(--color-body);
+  background: none;
+  border: var(--field-border) solid var(--color-dash-border);
+}
+
+.logout-modal__cancel:hover {
+  background-color: var(--color-page);
+}
+
+.logout-modal__confirm {
+  padding: 9.375px var(--space-4);
+  font-weight: 600;
+  color: #ffffff;
+  background-color: var(--color-logout);
+  border: 0;
+}
+
+.logout-modal__confirm:hover {
+  background-color: #c10007;
+}
+
 /* The application details screen has its own stylesheet — styles/application.css. */
 
 @media (max-width: 1100px) {
@@ -674,6 +776,13 @@
   content: '';
 }
 
+/* Anchors the account menu; the topbar itself is sticky, so the menu is
+   positioned against this rather than the page. */
+.topbar__account {
+  position: relative;
+  flex: none;
+}
+
 .topbar__user {
   display: flex;
   align-items: center;
@@ -709,6 +818,51 @@
   background-color: var(--color-brand);
   border-radius: var(--radius-pill);
   font-variation-settings: 'opsz' 14;
+}
+
+/* Right-aligned to the account button: it sits at the end of the topbar, so a
+   menu wider than its trigger has to grow inwards. */
+.topbar__menu {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 30;
+  min-width: 176px;
+  padding: var(--space-2);
+  background-color: var(--color-surface);
+  border: var(--field-border) solid var(--color-dash-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 24px -8px rgba(15, 23, 42, 0.18);
+}
+
+.topbar__menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--space-4);
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+.topbar__menu-item:hover {
+  background-color: var(--color-dash-chip);
+}
+
+.topbar__menu-item img {
+  display: block;
+  flex: none;
+  width: 14.992px;
+  height: 14.992px;
 }
 
 .topbar__identity {

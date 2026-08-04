@@ -4,9 +4,18 @@ import DashboardLayout from '../layouts/DashboardLayout.jsx';
 import searchIcon from '../assets/icons/dashboard/search.svg';
 import refreshIcon from '../assets/icons/dashboard/refresh.svg';
 import { SUMMARY_CARDS, QUEUE_ROWS } from '../constants/queueData.js';
+import { useState } from 'react';
 
 function AssignedQueuePage() {
   const navigate = useNavigate();
+  const[query , setquery] = useState('')
+
+  const term = query.trim().toLowerCase();
+  const rows = term? QUEUE_ROWS.filter((row) =>
+  [row.id, row.name, row.department, row.service].some((field) =>
+    field.toLowerCase().includes(term)
+  )
+): QUEUE_ROWS;
   return (
     <DashboardLayout>
       <main className="queue-page">
@@ -26,7 +35,8 @@ function AssignedQueuePage() {
 
         <section className="queue-stats" aria-label="Queue summary">
           {SUMMARY_CARDS.map((card) => (
-            <article key={card.id} className={`queue-stat queue-stat--${card.tone}`}>
+            <article key={card.id} className={`queue-stat queue-stat--${card.tone}`}
+            >
               <div className="queue-stat__top">
                 <p className="queue-stat__label">{card.title}</p>
                 <span className="queue-stat__icon" aria-hidden="true">
@@ -42,7 +52,8 @@ function AssignedQueuePage() {
         <section className="queue-toolbar" aria-label="Queue controls">
           <label className="queue-search" htmlFor="queue-search">
             <img src={searchIcon} alt="" width="13.12" height="13.12" />
-            <input id="queue-search" type="search" placeholder="Search…" />
+            <input id="queue-search" type="search" placeholder="Search…"
+            value={query} onChange={(e)=> setquery(e.target.value)} />
           </label>
 
           <button className="queue-toolbar__button" type="button">
@@ -69,8 +80,10 @@ function AssignedQueuePage() {
                 <div role="columnheader">Action</div>
               </div>
 
-              {QUEUE_ROWS.map((row) => (
-                <div className="queue-table__row" role="row" key={row.id}>
+              {rows.map((row) => (
+                <div className="queue-table__row cursor-pointer" role="row" key={row.id}
+                  onClick={() => navigate(`/assigned-queue/${row.id}`)}
+                >
                   <div className="queue-table__cell queue-table__id" role="cell">
                     {row.id}
                   </div>
@@ -111,7 +124,6 @@ function AssignedQueuePage() {
                     <button
                       className="queue-action"
                       type="button"
-                      onClick={() => navigate(`/assigned-queue/${row.id}`)}
                     >
                       Review
                     </button>

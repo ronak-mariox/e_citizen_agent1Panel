@@ -118,6 +118,7 @@ export function ProfilePanel() {
                 className="settings-field__input"
                 type={field.type}
                 name={field.name}
+                disabled={!field.editable}
                 autoComplete={field.autoComplete}
                 value={values[field.name]}
                 onChange={(event) => handleChange(field.name, event.target.value)}

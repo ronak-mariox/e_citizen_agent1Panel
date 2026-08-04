@@ -1,0 +1,105 @@
+/* Notification centre — Figma node 155:6311.
+
+   `type` drives three things at once: the tinted icon badge, the chip under the
+   body, and which filter chip the row answers to, so a row can never be filed
+   under one and badged as another. */
+export const NOTIFICATION_TYPES = [
+  { id: 'assignments', label: 'Assignments', tone: 'assignment' },
+  { id: 'verification', label: 'Verification', tone: 'verification' },
+  { id: 'customer', label: 'Customer Reply', tone: 'customer' },
+  { id: 'sla', label: 'SLA', tone: 'sla' },
+  { id: 'system', label: 'System Alerts', tone: 'system' },
+];
+
+export const NOTIFICATIONS = [
+  {
+    id: 'ntf-1',
+    type: 'assignments',
+    title: 'New Application Assigned',
+    body: 'APP-2024-00418 assigned from Rajesh Kumar — Property Tax, Revenue Dept.',
+    time: '5m ago',
+    unread: true,
+    link: '/assigned-queue/APP-2024-00418',
+  },
+  {
+    id: 'ntf-2',
+    type: 'customer',
+    title: 'Customer Re-uploaded Documents',
+    body: 'Kiran Rao has uploaded new documents for APP-2024-00422.',
+    time: '22m ago',
+    unread: true,
+    link: '/assigned-queue/APP-2024-00422',
+  },
+  {
+    id: 'ntf-3',
+    type: 'sla',
+    title: 'SLA Warning — 2 Hours Remaining',
+    body: 'APP-2024-00419 (Priya Sharma) SLA expires in 2h 14m. Immediate action required.',
+    time: '1h ago',
+    unread: true,
+    link: '/assigned-queue/APP-2024-00419',
+  },
+  {
+    id: 'ntf-4',
+    type: 'verification',
+    title: 'Document Verified Successfully',
+    body: 'Aadhaar card for APP-2024-00420 (Anand Verma) marked as verified.',
+    time: '2h ago',
+    unread: false,
+    link: '/assigned-queue/APP-2024-00420',
+  },
+  {
+    id: 'ntf-5',
+    type: 'system',
+    title: 'System Maintenance Tonight',
+    body: 'Scheduled maintenance on 09 Jul 2024, 11 PM – 1 AM IST. Save your work.',
+    time: '3h ago',
+    unread: false,
+    link: null,
+  },
+  {
+    id: 'ntf-6',
+    type: 'assignments',
+    title: 'Application Forwarded to Agent 2',
+    body: 'APP-2024-00425 (Suresh Iyer) forwarded to Kavitha R. for final review.',
+    time: '4h ago',
+    unread: false,
+    link: '/forwarded',
+  },
+  {
+    id: 'ntf-7',
+    type: 'customer',
+    title: 'Customer Query Response',
+    body: 'Sunita Patel responded to query on APP-2024-00421 with the requested proof.',
+    time: '5h ago',
+    unread: false,
+    link: '/assigned-queue/APP-2024-00421',
+  },
+  {
+    id: 'ntf-8',
+    type: 'sla',
+    title: 'SLA Breached — Immediate Action',
+    body: 'APP-2024-00428 (Vikram Singh) SLA breached. Escalated to the supervisor.',
+    time: '6h ago',
+    unread: true,
+    link: '/assigned-queue/APP-2024-00428',
+  },
+  {
+    id: 'ntf-9',
+    type: 'verification',
+    title: 'Application Rejected',
+    body: 'APP-2024-00433 (Geeta Pillai) rejected — fraudulent supporting documents.',
+    time: 'Yesterday',
+    unread: false,
+    link: '/completed',
+  },
+  {
+    id: 'ntf-10',
+    type: 'assignments',
+    title: 'Bulk Assignment — 5 New Cases',
+    body: '5 new applications assigned to your queue by Supervisor Anil M.',
+    time: 'Yesterday',
+    unread: false,
+    link: '/assigned-queue',
+  },
+];

@@ -26,12 +26,12 @@ export const AGENT_PROFILE = {
 
 /* Field order matches the designed two-column grid, row by row. */
 export const PROFILE_FIELDS = [
-  { name: 'fullName', label: 'Full Name', type: 'text', autoComplete: 'name' },
-  { name: 'employeeId', label: 'Employee ID', type: 'text', autoComplete: 'off' },
-  { name: 'email', label: 'Email', type: 'email', autoComplete: 'email' },
-  { name: 'mobile', label: 'Mobile', type: 'tel', autoComplete: 'tel' },
-  { name: 'department', label: 'Department', type: 'text', autoComplete: 'off' },
-  { name: 'designation', label: 'Designation', type: 'text', autoComplete: 'off' },
+  { name: 'fullName', label: 'Full Name', type: 'text', autoComplete: 'name' , editable: true},
+  { name: 'employeeId', label: 'Employee ID', type: 'text', autoComplete: 'off' , editable: false},
+  { name: 'email', label: 'Email', type: 'email', autoComplete: 'email' , editable: false},
+  { name: 'mobile', label: 'Mobile', type: 'tel', autoComplete: 'tel' , editable: true},
+  { name: 'department', label: 'Department', type: 'text', autoComplete: 'off' , editable: true},
+  { name: 'designation', label: 'Designation', type: 'text', autoComplete: 'off' , editable: true},
 ];
 
 export const MIN_PASSWORD_LENGTH = 8;
