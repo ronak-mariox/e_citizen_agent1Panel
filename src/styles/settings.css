@@ -234,11 +234,34 @@
   outline: none;
 }
 
+/* A value the agent can read and copy but not change. Tinted so the whole grid
+   reads as a record rather than as a form someone forgot to enable — and it
+   keeps the caret, unlike a disabled input, so an employee ID can be selected
+   and read back to a helpdesk. */
+.settings-field__input[readonly] {
+  color: var(--color-strong);
+  background-color: var(--color-dash-chip);
+  border-color: transparent;
+  cursor: default;
+}
+
+.settings-field__input[readonly]:focus {
+  border-color: var(--color-dash-border);
+}
+
 .settings-field__error {
   margin-top: var(--space-1);
   font-size: var(--text-xs);
   line-height: var(--leading-xs);
   color: var(--color-danger);
+}
+
+/* Why the fields above cannot be edited, and where to go instead. */
+.settings-note {
+  margin-top: var(--space-5);
+  font-size: var(--text-xs);
+  line-height: var(--leading-sm);
+  color: var(--color-dash-text);
 }
 
 .settings-save {

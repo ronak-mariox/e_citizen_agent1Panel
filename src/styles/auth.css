@@ -354,6 +354,14 @@
   padding-right: 38.201px;
 }
 
+/* Edge draws its own reveal control inside every password field. It sits right
+   next to .field__toggle, so the field shows two eye buttons — one of them
+   unstyled. The custom toggle is the one that matches the design. */
+.field__input::-ms-reveal,
+.field__input::-ms-clear {
+  display: none;
+}
+
 .field__input::placeholder {
   color: rgba(15, 23, 42, 0.5);
 }

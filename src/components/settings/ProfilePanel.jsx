@@ -1,28 +1,40 @@
 import { useEffect, useId, useRef, useState } from 'react';
 
-import { AGENT } from '../../constants/dashboard.js';
-import { AGENT_PROFILE, PROFILE_FIELDS } from '../../constants/settings.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { PROFILE_FIELDS } from '../../constants/settings.js';
+import { agentProfileFrom, initialsOf } from '../../utils/format.js';
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+/* The signed-in agent's own record.
+ *
+ * Read from the session rather than a constant, so it is this agent's details
+ * and not a sample. Every field is display-only: an agent account is opened and
+ * scoped by an administrator, and no endpoint exists for an agent to change
+ * their own name, number or posting. The mobile number should stay that way
+ * even once one does — it is where a password-reset code is delivered, so
+ * editing it from inside a live session would be a way to take an account over.
+ *
+ * The photo is the exception, and it is a real one: it belongs to AgentProfile
+ * rather than to the account, and is the agent's to set. It has no upload
+ * endpoint yet, so the picker still stops at a local preview. */
 
 export function ProfilePanel() {
   const fieldPrefix = useId();
   const photoInputRef = useRef(null);
-  const [values, setValues] = useState(AGENT_PROFILE);
+  const { user } = useAuth();
+
+  const values = agentProfileFrom(user);
+
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
   const [photoError, setPhotoError] = useState('');
-  const [saving, setSaving] = useState(false);
 
   // The preview is an object URL, so it has to be released when it is replaced.
   useEffect(() => {
     if (!photoPreview) return undefined;
     return () => URL.revokeObjectURL(photoPreview);
   }, [photoPreview]);
-
-  function handleChange(name, value) {
-    setValues((current) => ({ ...current, [name]: value }));
-  }
 
   function handlePhotoChange(event) {
     const file = event.target.files?.[0];
@@ -52,20 +64,6 @@ export function ProfilePanel() {
     if (photoInputRef.current) photoInputRef.current.value = '';
   }
 
-  // TODO: persist the profile once the agent settings API is available.
-  async function handleSubmit(event) {
-    event.preventDefault();
-
-    const formdata = new FormData();
-    if(!values && !photo) return null;
-    formdata.set("fullname" , values.fullName);
-    formdata.set("email" , values.email)
-    
-    setSaving(true);
-    console.info('profile save requested', values, photo);
-    setSaving(false);
-  }
-
   return (
     <section className="settings-card">
       <h2 className="settings-card__title">Profile Information</h2>
@@ -74,11 +72,13 @@ export function ProfilePanel() {
         {photoPreview ? (
           <img className="settings-identity__photo-preview" src={photoPreview} alt="Profile" />
         ) : (
-          <span className="settings-identity__avatar">{AGENT.initials}</span>
+          <span className="settings-identity__avatar">{initialsOf(values.fullName)}</span>
         )}
         <div>
-          <p className="settings-identity__name">{values.fullName}</p>
-          <p className="settings-identity__meta">{`${AGENT.role} · ${values.employeeId}`}</p>
+          <p className="settings-identity__name">{values.fullName || 'Loading…'}</p>
+          <p className="settings-identity__meta">
+            {[values.level, values.employeeId].filter(Boolean).join(' · ')}
+          </p>
           <input
             ref={photoInputRef}
             className="settings-identity__file"
@@ -106,31 +106,33 @@ export function ProfilePanel() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate>
-        <div className="settings-grid">
-          {PROFILE_FIELDS.map((field) => (
-            <div className="settings-field" key={field.name}>
-              <label className="settings-field__label" htmlFor={`${fieldPrefix}-${field.name}`}>
-                {field.label}
-              </label>
-              <input
-                id={`${fieldPrefix}-${field.name}`}
-                className="settings-field__input"
-                type={field.type}
-                name={field.name}
-                disabled={!field.editable}
-                autoComplete={field.autoComplete}
-                value={values[field.name]}
-                onChange={(event) => handleChange(field.name, event.target.value)}
-              />
-            </div>
-          ))}
-        </div>
+      <div className="settings-grid">
+        {PROFILE_FIELDS.map((field) => (
+          <div className="settings-field" key={field.name}>
+            <label className="settings-field__label" htmlFor={`${fieldPrefix}-${field.name}`}>
+              {field.label}
+            </label>
+            {/* `readOnly` rather than `disabled`: the value still has to be
+                selectable and copyable — an agent reading their employee ID
+                back to a helpdesk needs to be able to copy it. */}
+            <input
+              id={`${fieldPrefix}-${field.name}`}
+              className="settings-field__input"
+              type={field.type}
+              name={field.name}
+              readOnly
+              autoComplete={field.autoComplete}
+              value={values[field.name]}
+            />
+          </div>
+        ))}
+      </div>
 
-        <button className="settings-save" type="submit" disabled={saving}>
-          {saving ? 'Saving…' : 'Save Changes'}
-        </button>
-      </form>
+      <p className="settings-note">
+        These details are held on your staff account and are maintained by your administrator.
+        Contact them to correct your name, mobile number or posting. You can change your password
+        under the Password tab.
+      </p>
     </section>
   );
 }
