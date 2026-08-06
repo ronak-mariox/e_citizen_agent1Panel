@@ -9,11 +9,11 @@ import sendIcon from '../assets/icons/send.svg';
 export function ForgotPasswordForm({ onSubmit }) {
   const fieldId = useId();
 
-  const [employeeId, setEmployeeId] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = employeeId.trim().length > 0 && !submitting;
+  const canSubmit = identifier.trim().length > 0 && !submitting;
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -26,7 +26,7 @@ export function ForgotPasswordForm({ onSubmit }) {
     setSubmitting(true);
 
     try {
-      await onSubmit?.({ employeeId: employeeId.trim() });
+      await onSubmit?.({ identifier: identifier.trim() });
     } catch (error) {
       setFormError(error?.message || 'Unable to send the code. Please try again.');
     } finally {
@@ -47,15 +47,15 @@ export function ForgotPasswordForm({ onSubmit }) {
         </div>
         <h1 className="auth-pane__title">Forgot password?</h1>
         <p className="auth-pane__subtitle">
-          Enter your Employee ID. We will send a one-time code to the mobile number on your
-          staff record.
+          Enter your Employee ID or the email address on your record. We will send a one-time
+          code to the mobile number on your staff record.
         </p>
       </header>
 
       <form onSubmit={handleSubmit} noValidate>
         <div className="field">
           <label className="field__label" htmlFor={fieldId}>
-            Employee ID
+            Email or Employee ID
           </label>
           <div className="field__control">
             <img className="field__icon" src={userIcon} alt="" width="14.992" height="14.992" />
@@ -63,11 +63,11 @@ export function ForgotPasswordForm({ onSubmit }) {
               id={fieldId}
               className="field__input"
               type="text"
-              name="employeeId"
+              name="identifier"
               autoComplete="username"
-              placeholder="ECZ-A1-0042"
-              value={employeeId}
-              onChange={(event) => setEmployeeId(event.target.value)}
+              placeholder="ravi.kumar@ecitizen.gov.in"
+              value={identifier}
+              onChange={(event) => setIdentifier(event.target.value)}
             />
           </div>
         </div>

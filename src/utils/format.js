@@ -47,3 +47,22 @@ export function agentProfileFrom(user) {
     status: STATUS_LABEL[user?.status] ?? titleCase(user?.status),
   };
 }
+
+/**
+ * An uploaded file path -> a URL the browser can request.
+ *
+ * The API stores paths relative to its own origin (`/uploads/agents/…`), so
+ * moving the API to another host does not invalidate every stored row. That
+ * leaves the panel to rejoin the two, and the only origin it knows is inside
+ * VITE_API_BASE_URL — which carries the /api/v1 prefix that these files sit
+ * outside of, hence the trim.
+ */
+export function assetUrl(storedPath) {
+  if (!storedPath) return '';
+  if (/^https?:/.test(storedPath)) return storedPath;
+
+  const base = import.meta.env.VITE_API_BASE_URL ?? '';
+  const origin = base.replace(/\/api\/v\d+\/?$/, '').replace(/\/+$/, '');
+
+  return origin + storedPath;
+}

@@ -8,12 +8,13 @@ import { getErrorMessage } from '../api/client.js';
 export function VerifyOtpPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const employeeId = location.state?.employeeId ?? '';
+  // whichever of employee ID / email was used to ask for the code
+  const identifier = location.state?.identifier ?? '';
   const mobile = location.state?.mobile ?? '';
   const devOtp = location.state?.devOtp ?? '';
 
   // Landing here directly (refresh, bookmark) means no code was ever sent.
-  if (!employeeId) {
+  if (!identifier) {
     return <Navigate to="/forgot-password" replace />;
   }
 
@@ -22,7 +23,7 @@ export function VerifyOtpPage() {
       // A verified code only unlocks the reset step — the agent still signs in
       // afterwards. `resetToken` is what authorises that next call, and the OTP
       // is spent here so it never travels further.
-      const { resetToken } = await verifyResetOtp({ employeeId, otp: code });
+      const { resetToken } = await verifyResetOtp({ identifier, otp: code });
 
       navigate('/reset-password', { replace: true, state: { resetToken } });
     } catch (error) {
@@ -33,7 +34,7 @@ export function VerifyOtpPage() {
   async function handleResend() {
     try {
       // returned so the form can refresh its dev hint with the new code
-      const data = await resendResetOtp({ employeeId });
+      const data = await resendResetOtp({ identifier });
 
       return data.devOtp;
     } catch (error) {

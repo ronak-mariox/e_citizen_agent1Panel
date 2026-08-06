@@ -116,4 +116,16 @@ export function getErrorMessage(error) {
   return 'Cannot reach the server. Check that the backend is running.';
 }
 
+/**
+ * Which input the API blamed, when it named one.
+ *
+ * A validation or sign-in failure carries an `errors` array of `{ field,
+ * message }`, and a form that knows the field can mark that input instead of
+ * showing one message under all of them. Null when the failure is about the
+ * request as a whole — a network drop, a blocked account, the wrong console.
+ */
+export function getErrorField(error) {
+  return error.response?.data?.errors?.[0]?.field ?? null;
+}
+
 export default client;

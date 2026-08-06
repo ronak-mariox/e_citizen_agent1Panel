@@ -8,7 +8,7 @@ import {
 } from "react";
 
 import * as authApi from "../api/auth";
-import { getErrorMessage, setSessionExpiredHandler } from "../api/client";
+import { getErrorField, getErrorMessage, setSessionExpiredHandler } from "../api/client";
 import { PANEL_ROLE, PANEL_WRONG_ROLE_MESSAGE } from "../constants/auth";
 import {
   clearSession,
@@ -80,7 +80,13 @@ export function AuthProvider({ children }) {
       // Only an axios failure has `.response`, and only that needs unwrapping —
       // running getErrorMessage on our own Error would report it as a network
       // problem and lose what it actually said.
-      throw error.response ? new Error(getErrorMessage(error)) : error;
+      if (!error.response) throw error;
+
+      const failure = new Error(getErrorMessage(error));
+      // Which input was wrong, when the API says so, so the sign-in form can
+      // mark that field rather than describe the whole attempt as invalid.
+      failure.field = getErrorField(error);
+      throw failure;
     }
   }, []);
 
@@ -97,15 +103,34 @@ export function AuthProvider({ children }) {
     }
   }, [endSession]);
 
+  /**
+   * Fold a changed field into the session without a round trip.
+   *
+   * The photo is uploaded by the settings screen, and the avatar in the shell
+   * has to follow it. Refetching /auth/me would do the same job for the cost of
+   * a request that would return what the caller already has.
+   */
+  const applyUserPatch = useCallback((patch) => {
+    setUser((current) => {
+      if (!current) return current;
+
+      const next = { ...current, ...patch };
+      saveSession({ user: next });
+
+      return next;
+    });
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
       status,
       isAuthenticated: status === "authenticated",
+      applyUserPatch,
       signIn,
       signOut,
     }),
-    [user, status, signIn, signOut]
+    [user, status, applyUserPatch, signIn, signOut]
   );
 
   return (

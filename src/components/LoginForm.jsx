@@ -52,7 +52,11 @@ export function LoginForm({ onSubmit }) {
     try {
       await onSubmit?.({ employeeId: employeeId.trim(), password, remember });
     } catch (error) {
-      setFormError(error?.message || 'Unable to sign in. Please try again.');
+      // A field-tagged failure belongs beside the input it is about. Anything
+      // else — network, blocked account, wrong console — is about the attempt
+      // as a whole and stays in the banner.
+      if (error?.field) setErrors({ [error.field]: error.message });
+      else setFormError(error?.message || 'Unable to sign in. Please try again.');
     } finally {
       setSubmitting(false);
     }

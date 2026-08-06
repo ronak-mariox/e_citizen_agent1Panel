@@ -127,6 +127,12 @@
   border-radius: var(--radius-pill);
 }
 
+/* Dimmed while the upload is in flight, so the picture on screen reads as
+   not-yet-saved rather than as done. */
+.settings-identity__photo-preview[data-busy] {
+  opacity: 0.55;
+}
+
 /* The real input is hidden; the "Change Photo" button proxies the click. */
 .settings-identity__file {
   display: none;

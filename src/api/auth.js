@@ -42,15 +42,21 @@ export async function getMe() {
   return response.data.data.user;
 }
 
-/** Step 1 of the reset flow — sends a 6-digit code to the agent's mobile. */
-export async function forgotPassword({ employeeId }) {
-  const response = await client.post('/auth/password/forgot', { employeeId });
+/**
+ * Step 1 of the reset flow — sends a 6-digit code to the agent's mobile.
+ *
+ * `identifier` is the agent's employee ID or the email address on their record;
+ * the backend tells the two apart on its own. The code goes to the mobile
+ * either way.
+ */
+export async function forgotPassword({ identifier }) {
+  const response = await client.post('/auth/password/forgot', { identifier });
 
   return response.data.data;
 }
 
-export async function resendResetOtp({ employeeId }) {
-  const response = await client.post('/auth/password/resend', { employeeId });
+export async function resendResetOtp({ identifier }) {
+  const response = await client.post('/auth/password/resend', { identifier });
 
   return response.data.data;
 }
@@ -59,8 +65,8 @@ export async function resendResetOtp({ employeeId }) {
  * Step 2 — a correct code returns a short-lived `resetToken`, the only thing
  * that authorises step 3. The code itself is spent here.
  */
-export async function verifyResetOtp({ employeeId, otp }) {
-  const response = await client.post('/auth/password/verify-otp', { employeeId, otp });
+export async function verifyResetOtp({ identifier, otp }) {
+  const response = await client.post('/auth/password/verify-otp', { identifier, otp });
 
   return response.data.data;
 }

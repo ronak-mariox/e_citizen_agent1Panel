@@ -3,8 +3,6 @@ import tabPassword from '../assets/icons/settings/tab-password.svg';
 import tabSecurity from '../assets/icons/settings/tab-security.svg';
 import tabLogout from '../assets/icons/settings/tab-logout.svg';
 
-import { AGENT } from './dashboard.js';
-
 export const SETTINGS_TABS = [
   { id: 'profile', label: 'Profile', icon: tabProfile },
   { id: 'password', label: 'Password', icon: tabPassword },
