@@ -65,7 +65,7 @@ export function ForgotPasswordForm({ onSubmit }) {
               type="text"
               name="identifier"
               autoComplete="username"
-              placeholder="ravi.kumar@ecitizen.gov.in"
+              placeholder="Enter your email or employee ID"
               value={identifier}
               onChange={(event) => setIdentifier(event.target.value)}
             />

@@ -88,7 +88,7 @@ export function LoginForm({ onSubmit }) {
               type="text"
               name="employeeId"
               autoComplete="username"
-              placeholder="ECZ-A1-0042"
+              placeholder="Enter your employee ID"
               value={employeeId}
               onChange={(event) => setEmployeeId(event.target.value)}
               aria-invalid={Boolean(errors.employeeId)}
@@ -114,7 +114,7 @@ export function LoginForm({ onSubmit }) {
               type={showPassword ? 'text' : 'password'}
               name="password"
               autoComplete="current-password"
-              placeholder="••••••••"
+              placeholder="Enter your password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               aria-invalid={Boolean(errors.password)}

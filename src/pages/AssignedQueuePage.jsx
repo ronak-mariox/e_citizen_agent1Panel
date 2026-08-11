@@ -52,7 +52,7 @@ function AssignedQueuePage() {
         <section className="queue-toolbar" aria-label="Queue controls">
           <label className="queue-search" htmlFor="queue-search">
             <img src={searchIcon} alt="" width="13.12" height="13.12" />
-            <input id="queue-search" type="search" placeholder="Search…"
+            <input id="queue-search" type="search" placeholder="Search by application ID or citizen name"
             value={query} onChange={(e)=> setquery(e.target.value)} />
           </label>
 

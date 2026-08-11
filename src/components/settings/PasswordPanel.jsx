@@ -90,7 +90,7 @@ export function PasswordPanel() {
                     type="password"
                     name={field.name}
                     autoComplete={field.autoComplete}
-                    placeholder="••••••••"
+                    placeholder={`Enter your ${field.label.toLowerCase()}`}
                     value={values[field.name]}
                     onChange={(event) => handleChange(field.name, event.target.value)}
                     aria-invalid={Boolean(error)}
