@@ -8,6 +8,7 @@ import bellIcon from '../../assets/icons/dashboard/bell.svg';
 import profileIcon from '../../assets/icons/settings/tab-profile.svg';
 import { AGENT } from '../../constants/dashboard.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { assetUrl } from '../../utils/format.js';
 import { useNavigate } from 'react-router-dom';
 
 /** "Ravi Kumar" -> "RK"; falls back to one letter for a single-word name. */
@@ -44,6 +45,12 @@ export function Topbar({ onToggleSidebar }) {
   // no name on it, which the guards make unlikely.
   const name = user?.fullName || AGENT.name;
   const employeeId = user?.employeeId ?? AGENT.role;
+
+  /* The account carries the photo as a path relative to the API origin, so it
+     has to be resolved before it can be rendered. Uploading one calls
+     applyUserPatch({ photo }) in the settings panel, which is what makes this
+     follow without a reload. */
+  const photo = assetUrl(user?.photo);
 
   // A menu anchored to the topbar has to close on the two things that mean
   // "not this": a click landing anywhere else, and Escape.
@@ -100,7 +107,11 @@ export function Topbar({ onToggleSidebar }) {
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            <span className="avatar">{initialsOf(name)}</span>
+            {photo ? (
+              <img className="avatar avatar--photo" src={photo} alt="" />
+            ) : (
+              <span className="avatar">{initialsOf(name)}</span>
+            )}
             <span className="topbar__identity">
               <span className="topbar__username">{name}</span>
               <span className="topbar__role">{employeeId}</span>

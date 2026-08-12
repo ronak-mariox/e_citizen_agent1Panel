@@ -819,6 +819,13 @@
   border-radius: var(--radius-pill);
   font-variation-settings: 'opsz' 14;
 }
+/* The same circle, holding a picture instead of two letters. `cover` so a
+   portrait crops to the middle rather than squashing to fit. */
+.avatar--photo {
+  object-fit: cover;
+  background-color: transparent;
+}
+
 
 /* Right-aligned to the account button: it sits at the end of the topbar, so a
    menu wider than its trigger has to grow inwards. */
