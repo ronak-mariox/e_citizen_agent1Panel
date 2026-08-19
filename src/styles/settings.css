@@ -235,6 +235,45 @@
   color: var(--color-placeholder-soft);
 }
 
+/* ------------------------------------------- password reveal (change form) */
+
+.settings-field__control {
+  position: relative;
+}
+
+.settings-field__input--with-action {
+  padding-right: 33px;
+}
+
+/* Edge draws its own reveal control inside every password field. It would sit
+   right next to this one, so the field would show two eyes — one of them
+   unstyled. The same rule auth.css applies to the sign-in field. */
+.settings-field__input::-ms-reveal,
+.settings-field__input::-ms-clear {
+  display: none;
+}
+
+.settings-field__toggle {
+  position: absolute;
+  top: 50%;
+  right: 9.951px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.settings-field__toggle img {
+  display: block;
+  width: 13.12px;
+  height: 13.12px;
+}
+
 .settings-field__input:focus {
   border-color: var(--color-brand);
   outline: none;

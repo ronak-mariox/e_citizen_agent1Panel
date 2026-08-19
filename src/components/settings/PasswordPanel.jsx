@@ -1,6 +1,8 @@
 import { useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import eyeIcon from '../../assets/icons/eye.svg';
+import eyeOffIcon from '../../assets/icons/eye-off.svg';
 import { changePassword } from '../../api/auth.js';
 import { getErrorMessage } from '../../api/client.js';
 import { MIN_PASSWORD_LENGTH, PASSWORD_FIELDS } from '../../constants/settings.js';
@@ -13,12 +15,21 @@ export function PasswordPanel() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const [values, setValues] = useState(EMPTY_FORM);
+
+  /* Per field, not one switch for all three. Revealing the new password to
+     check a typo should not also expose the current one to the room. */
+  const [revealed, setRevealed] = useState({});
+
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
   function handleChange(name, value) {
     setValues((current) => ({ ...current, [name]: value }));
+  }
+
+  function toggleReveal(name) {
+    setRevealed((current) => ({ ...current, [name]: !current[name] }));
   }
 
   function validate() {
@@ -78,24 +89,45 @@ export function PasswordPanel() {
             {PASSWORD_FIELDS.map((field) => {
               const fieldId = `${fieldPrefix}-${field.name}`;
               const error = errors[field.name];
+              const isRevealed = Boolean(revealed[field.name]);
 
               return (
                 <div className="settings-field" key={field.name}>
                   <label className="settings-field__label" htmlFor={fieldId}>
                     {field.label}
                   </label>
-                  <input
-                    id={fieldId}
-                    className="settings-field__input"
-                    type="password"
-                    name={field.name}
-                    autoComplete={field.autoComplete}
-                    placeholder={`Enter your ${field.label.toLowerCase()}`}
-                    value={values[field.name]}
-                    onChange={(event) => handleChange(field.name, event.target.value)}
-                    aria-invalid={Boolean(error)}
-                    aria-describedby={error ? `${fieldId}-error` : undefined}
-                  />
+
+                  <div className="settings-field__control">
+                    <input
+                      id={fieldId}
+                      className="settings-field__input settings-field__input--with-action"
+                      type={isRevealed ? 'text' : 'password'}
+                      name={field.name}
+                      autoComplete={field.autoComplete}
+                      placeholder={`Enter your ${field.label.toLowerCase()}`}
+                      value={values[field.name]}
+                      onChange={(event) => handleChange(field.name, event.target.value)}
+                      aria-invalid={Boolean(error)}
+                      aria-describedby={error ? `${fieldId}-error` : undefined}
+                    />
+
+                    {/* type="button", or it would submit the form. */}
+                    <button
+                      className="settings-field__toggle"
+                      type="button"
+                      onClick={() => toggleReveal(field.name)}
+                      aria-label={`${isRevealed ? 'Hide' : 'Show'} ${field.label.toLowerCase()}`}
+                      aria-pressed={isRevealed}
+                    >
+                      <img
+                        src={isRevealed ? eyeOffIcon : eyeIcon}
+                        alt=""
+                        width="13.12"
+                        height="13.12"
+                      />
+                    </button>
+                  </div>
+
                   {error && (
                     <p className="settings-field__error" id={`${fieldId}-error`}>
                       {error}
