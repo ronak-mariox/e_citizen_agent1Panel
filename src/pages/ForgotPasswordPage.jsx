@@ -13,7 +13,8 @@ export function ForgotPasswordPage() {
       // `identifier` is an employee ID or an email address — the backend works
       // out which. The reply is deliberately the same for an unknown one, so
       // this screen always moves on: it cannot be used to probe for accounts.
-      // `mobile` comes back masked, and `devOtp` only outside production.
+      // `mobile` comes back masked, and `devOtp` only when the backend is set
+      // to return the code (OTP_EXPOSE_IN_RESPONSE).
       const data = await forgotPassword({ identifier });
 
       navigate('/verify-otp', {
