@@ -276,6 +276,13 @@
   cursor: pointer;
 }
 
+/* No certificate on this row yet — Download/Print render as this rather than
+   working links, and say so rather than looking identical to a live one. */
+.cp-row-action:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
 /* ----------------------------------------------------------- responsive -- */
 
 @media (max-width: 1400px) {

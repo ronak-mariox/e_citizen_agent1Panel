@@ -1,9 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import DashboardLayout from '../layouts/DashboardLayout.jsx';
-import { AGENT } from '../constants/dashboard.js';
-import { APPLICATION_STEPS, CHECKLIST_ITEMS, QUEUE_ROWS } from '../constants/queueData.js';
+import * as queueApi from '../api/queue.js';
+import { getErrorMessage } from '../api/client.js';
+import { useLiveRefresh } from '../hooks/useLiveRefresh.js';
+import {
+  APPLICATION_STEPS,
+  CHECKLIST_ITEMS,
+  toApplicationDetail,
+  toVerificationDraft,
+} from '../constants/applicationDetail.js';
 import breadcrumbBack from '../assets/icons/application/breadcrumb-back.svg';
 import metaHash from '../assets/icons/application/meta-hash.svg';
 import metaPhone from '../assets/icons/application/meta-phone.svg';
@@ -53,7 +60,6 @@ import modalApprove from '../assets/icons/application/modal-approve.svg';
 import modalReject from '../assets/icons/application/modal-reject.svg';
 import approvedSeal from '../assets/icons/application/approved-seal.svg';
 import rejectedSeal from '../assets/icons/application/rejected-seal.svg';
-import forwardPayment from '../assets/icons/application/forward-payment.svg';
 import forwardAgent2 from '../assets/icons/application/forward-agent2.svg';
 import viewForwarded from '../assets/icons/application/view-forwarded.svg';
 import waitingHourglass from '../assets/icons/application/waiting-hourglass.svg';
@@ -63,6 +69,12 @@ import queryUpload from '../assets/icons/application/query-upload.svg';
 import querySend from '../assets/icons/application/query-send.svg';
 import queryAlert from '../assets/icons/application/query-alert.svg';
 import queryRemind from '../assets/icons/application/query-remind.svg';
+import viewerZoom from '../assets/icons/application/viewer-zoom.svg';
+import viewerDownload from '../assets/icons/application/viewer-download.svg';
+import viewerClose from '../assets/icons/application/viewer-close.svg';
+import viewerFile from '../assets/icons/application/viewer-file.svg';
+import viewerApprove from '../assets/icons/application/viewer-approve.svg';
+import viewerReject from '../assets/icons/application/viewer-reject.svg';
 import '../styles/application.css';
 
 const CONTACT_ACTIONS = [
@@ -72,6 +84,20 @@ const CONTACT_ACTIONS = [
   { id: 'download', label: 'Download', icon: actionDownload },
   { id: 'print', label: 'Print', icon: actionPrint },
 ];
+
+/**
+ * The three that are ways of reaching the applicant.
+ *
+ * Every one of them is already drawn further down the page, as a row in the
+ * Communication tab — this strip is a shortcut to them rather than a second set
+ * of controls. So pressing one opens that tab and scrolls to it, and the agent
+ * lands on the channel they asked for with the applicant's number or address
+ * beside it.
+ *
+ * Download and Print are not here: they act on the application itself and have
+ * nothing to do with contacting anybody.
+ */
+const CONTACT_CHANNELS = ['call', 'chat', 'remind'];
 
 const TABS = [
   { id: 'documents', label: 'Documents', icon: tabDocuments },
@@ -128,12 +154,18 @@ function DetailSection({ icon, title, isOpen, onToggle, fields }) {
 
       {isOpen ? (
         <div className="app-section__body">
-          {fields.map((field) => (
-            <div className="app-field" key={field.label}>
-              <p className="app-field__label">{field.label}</p>
-              <p className="app-field__value">{field.value}</p>
-            </div>
-          ))}
+          {/* A service whose form is all file uploads has no answers to show
+              here. The section stays — the design has one — and says so. */}
+          {fields.length === 0 ? (
+            <p className="app-entry-empty">Nothing was recorded in this section.</p>
+          ) : (
+            fields.map((field) => (
+              <div className="app-field" key={field.label}>
+                <p className="app-field__label">{field.label}</p>
+                <p className="app-field__value">{field.value}</p>
+              </div>
+            ))
+          )}
         </div>
       ) : null}
     </section>
@@ -171,35 +203,36 @@ function Timeline({ entries }) {
   );
 }
 
-/* "01 Jul 2024 · 03:15 PM" — the stamp the design puts under a note author. */
-const noteStamp = (date) =>
-  `${date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })} · ${date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  })}`;
-
-/* Agent-private notes: an author-stamped list plus the composer. Save Note is
-   held at the design's disabled state until something is actually typed. */
+/* Agent-private notes: an author-stamped list plus the composer.
+ *
+ * Save Note is a real save, not a local add — `onAdd` round-trips through
+ * PATCH /agent/applications/:id the same way Save Draft elsewhere on this
+ * page does (see saveDraftNow/persistDraft), and `notes` above always
+ * reflects what the server actually has once it answers. That is what
+ * makes a note Agent 2 can eventually be shown one: a note that only ever
+ * existed in this component's own state never reached the record they
+ * read from.
+ */
 function Notes({ notes, onAdd }) {
   const [draft, setDraft] = useState('');
-  const canSave = draft.trim().length > 0;
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const canSave = draft.trim().length > 0 && !saving;
 
-  const save = () => {
+  const save = async () => {
     if (!canSave) return;
 
-    onAdd({
-      id: `note-${Date.now()}`,
-      author: AGENT.name,
-      initials: AGENT.initials,
-      time: noteStamp(new Date()),
-      text: draft.trim(),
-    });
-    setDraft('');
+    setSaving(true);
+    setError(null);
+
+    const ok = await onAdd(draft.trim());
+
+    setSaving(false);
+
+    // Not attempted — the payment popup has already said why; keep the text.
+    if (ok === null) return;
+    if (ok) setDraft('');
+    else setError('Could not save this note — try again.');
   };
 
   return (
@@ -240,9 +273,11 @@ function Notes({ notes, onAdd }) {
             disabled={!canSave}
           >
             <img src={noteSend} alt="" width="13.12" height="13.12" />
-            Save Note
+            {saving ? 'Saving…' : 'Save Note'}
           </button>
         </div>
+
+        {error && <p className="app-note-composer__error">{error}</p>}
       </div>
     </div>
   );
@@ -251,11 +286,12 @@ function Notes({ notes, onAdd }) {
 /* Communication is a launcher, not a log: one tinted row per channel, each
    carrying its own icon and arrow already tinted by the export. */
 function Communication({ applicant }) {
+  console.log('Communication component rendered with applicant:', applicant);
   const channels = [
     {
       id: 'call',
       title: 'Call Customer',
-      detail: applicant.mobile,
+      detail: 'xxxxxxxxxx',
       icon: commCall,
       arrow: commCallArrow,
     },
@@ -269,7 +305,7 @@ function Communication({ applicant }) {
     {
       id: 'email',
       title: 'Send Email',
-      detail: applicant.email,
+      detail: 'xyz@example.com',
       icon: commEmail,
       arrow: commEmailArrow,
     },
@@ -306,6 +342,55 @@ function Communication({ applicant }) {
    footer — so only the wording, the badge and the confirm label vary. `tone`
    stains the badge and the confirm button together: an approval reads green,
    a rejection red. */
+/** Where an Agent 2 payment request has got to, from this officer's side. */
+const PAYMENT_REQUEST_STAGE = {
+  with_you: 'Waiting on you',
+  with_applicant: 'With applicant',
+  paid: 'Paid',
+  waived: 'Waived',
+  cancelled: 'Cancelled',
+};
+
+/**
+ * "Payment not done yet" — what every verification control answers with while
+ * the applicant still owes the fee. One button: there is nothing to confirm,
+ * only something to know.
+ */
+function PaymentPendingDialog({ application, onClose }) {
+  return (
+    <div className="app-modal" role="dialog" aria-modal="true" aria-labelledby="app-unpaid-title" onClick={onClose}>
+      <div className="app-modal__card" onClick={(event) => event.stopPropagation()}>
+        <span className="app-modal__badge app-modal__badge--pending" aria-hidden="true">
+          <img src={queryAlert} alt="" width="26.239" height="26.239" />
+        </span>
+
+        <h2 className="app-modal__title" id="app-unpaid-title">
+          Payment Not Done Yet
+        </h2>
+
+        <p className="app-modal__text">
+          The applicant has not paid the fee of <strong>{application.amountDue}</strong> on{' '}
+          <strong>{application.id}</strong>.
+        </p>
+        <p className="app-modal__text app-modal__text--tight">
+          Document verification can start once the payment is done.
+        </p>
+
+        <div className="app-modal__actions">
+          <button
+            className="app-modal__button app-modal__button--confirm app-modal__button--pending"
+            type="button"
+            onClick={onClose}
+            autoFocus
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ConfirmDialog({
   title,
   confirmLabel,
@@ -313,6 +398,15 @@ function ConfirmDialog({
   onCancel,
   icon = modalApprove,
   tone = 'approve',
+  /* Blocks the confirm button — either because the request is in flight, or
+     because the dialog is still missing something the server requires. One
+     prop for both: from the button's point of view they are the same thing. */
+  busy = false,
+  /* What the server said when it refused. Shown in the dialog rather than on
+     the card behind it: the agent is looking here, and an approval blocked by
+     an unfinished checklist has to say so where the button that was pressed
+     is. */
+  error = null,
   children,
 }) {
   return (
@@ -335,6 +429,12 @@ function ConfirmDialog({
 
         {children}
 
+        {error ? (
+          <p className="app-save-status app-save-status--error" role="alert">
+            {error}
+          </p>
+        ) : null}
+
         <div className="app-modal__actions">
           <button
             className="app-modal__button app-modal__button--cancel"
@@ -347,6 +447,7 @@ function ConfirmDialog({
             className={`app-modal__button app-modal__button--confirm app-modal__button--${tone}`}
             type="button"
             onClick={onConfirm}
+            disabled={busy}
           >
             {confirmLabel}
           </button>
@@ -358,11 +459,15 @@ function ConfirmDialog({
 
 /* Raising a query is the one dialog that collects rather than confirms, so it
    keeps its own state and hands the finished query back on send. */
-function QueryDialog({ onSend, onCancel }) {
+function QueryDialog({ onSend, onCancel, busy = false, error = null }) {
   const [reason, setReason] = useState('');
   const [remarks, setRemarks] = useState('');
   const [priority, setPriority] = useState('Medium');
   const [notify, setNotify] = useState(true);
+
+  /* The reason is the category the citizen is shown, so the server requires it
+     — refused here too, rather than making a round trip that cannot succeed. */
+  const canSend = Boolean(reason) && !busy;
 
   return (
     <div
@@ -461,6 +566,12 @@ function QueryDialog({ onSend, onCancel }) {
           />
         </div>
 
+        {error ? (
+          <p className="app-save-status app-save-status--error" role="alert">
+            {error}
+          </p>
+        ) : null}
+
         <div className="app-modal__actions">
           <button
             className="app-modal__button app-modal__button--cancel"
@@ -472,10 +583,15 @@ function QueryDialog({ onSend, onCancel }) {
           <button
             className="app-modal__button app-modal__button--send"
             type="button"
-            onClick={() => onSend({ reason, remarks, priority, notify })}
+            onClick={() =>
+              // The control is drawn with capitalised options; the API's enum is
+              // lower case. Folded here rather than widening the enum.
+              onSend({ reason, remarks, priority: priority.toLowerCase(), notify })
+            }
+            disabled={!canSend}
           >
             <img src={querySend} alt="" width="14.992" height="14.992" />
-            Send Query
+            {busy ? 'Sending…' : 'Send Query'}
           </button>
         </div>
       </div>
@@ -483,17 +599,178 @@ function QueryDialog({ onSend, onCancel }) {
   );
 }
 
-function ApplicationDetailsPage() {
-  const navigate = useNavigate();
-  const { applicationId } = useParams();
-  const application = QUEUE_ROWS.find((row) => row.id === applicationId);
+/**
+ * The document itself, in a dialog over the tab it was opened from.
+ *
+ * An agent's whole job on this screen is deciding whether a file is acceptable,
+ * and Approve / Reject sat next to an eye that did nothing — so the decision was
+ * being made on a filename. Opening in a new tab was the other option and loses
+ * the application: the point is to look at the file *and* the row it belongs to.
+ *
+ * What the browser can render varies by type, so the body switches on it rather
+ * than assuming a PDF. Anything it cannot draw still gets the link, because
+ * "open it in your own viewer" beats a blank panel.
+ */
+function DocumentPreview({ document: file, onClose, onDecide }) {
+  const isImage = file.mimeType?.startsWith('image/');
+  const isPdf = file.mimeType === 'application/pdf';
+  /* The design draws the panel holding a placeholder, because a mock cannot
+     render a real file. Anything the browser can actually draw is drawn; the
+     placeholder is what the same panel falls back to, which is exactly the case
+     the design was drawing. */
+  const canRender = Boolean(file.previewUrl) && (isImage || isPdf);
 
-  // Payment details ships collapsed, the other two open — as drawn.
-  const [openSections, setOpenSections] = useState({
+  /* Approving from here is the same act as approving from the row behind it, so
+     it goes through the same handler — and then closes, because the decision was
+     the reason the file was opened. */
+  const decide = (status) => {
+    onDecide(file.id, status);
+    onClose();
+  };
+
+  return (
+    <div
+      className="app-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="preview-dialog-title"
+      onClick={onClose}
+    >
+      <div
+        className="app-modal__card app-modal__card--preview"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="app-preview__head">
+          <div>
+            <h2 className="app-preview__title" id="preview-dialog-title">
+              {file.title}
+            </h2>
+            <p className="app-preview__meta">
+              {file.category} · {file.size}
+            </p>
+          </div>
+
+          <div className="app-preview__tools">
+            {/* Opening the file full-size in its own tab is what "zoom" can
+                honestly mean here — the panel is a fixed height, and the
+                browser's own viewer is better at a large scan than a box
+                inside a dialog. Absent while there is no file. */}
+            {file.previewUrl ? (
+              <a
+                className="app-preview__tool"
+                href={file.previewUrl}
+                target="_blank"
+                rel="noreferrer"
+                title={`Open ${file.fileName} full size`}
+              >
+                <img src={viewerZoom} alt="Open full size" width="15" height="15" />
+              </a>
+            ) : null}
+
+            {file.previewUrl ? (
+              <a
+                className="app-preview__tool"
+                href={file.previewUrl}
+                download={file.fileName}
+                target="_blank"
+                rel="noreferrer"
+                title={`Download ${file.fileName}`}
+              >
+                <img src={viewerDownload} alt="Download" width="15" height="15" />
+              </a>
+            ) : null}
+
+            <button className="app-preview__tool" type="button" onClick={onClose} title="Close">
+              <img src={viewerClose} alt="Close" width="15" height="15" />
+            </button>
+          </div>
+        </header>
+
+        <div className="app-preview__body">
+          {isImage && file.previewUrl ? (
+            <img className="app-preview__image" src={file.previewUrl} alt={file.title} />
+          ) : null}
+
+          {/* <object> rather than <iframe>: it falls through to its own children
+              when the browser has no PDF plug-in, which is the case this has to
+              survive. */}
+          {isPdf && file.previewUrl ? (
+            <object
+              className="app-preview__frame"
+              data={file.previewUrl}
+              type="application/pdf"
+              aria-label={file.title}
+            >
+              <p className="app-preview__note">
+                This browser cannot display PDFs inline — open it full size
+                instead.
+              </p>
+            </object>
+          ) : null}
+
+          {/* The design's own panel content, and what it is for: a file the
+              browser will not draw. The second line says which of the two
+              reasons it is, because the next move differs — chase the applicant
+              for a file they never sent, or open one the browser cannot show. */}
+          {canRender ? null : (
+            <div className="app-preview__placeholder">
+              <img src={viewerFile} alt="" width="45" height="45" />
+              <p className="app-preview__placeholder-title">{file.title}</p>
+              <p className="app-preview__placeholder-note">
+                {!file.previewUrl
+                  ? 'Not uploaded yet — request it from the Communication tab'
+                  : 'Document preview'}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="app-preview__actions">
+          <button
+            className="app-preview__decision app-preview__decision--approve"
+            type="button"
+            onClick={() => decide('approved')}
+          >
+            <img src={viewerApprove} alt="" width="15" height="15" />
+            Approve
+          </button>
+
+          <button
+            className="app-preview__decision app-preview__decision--reject"
+            type="button"
+            onClick={() => decide('rejected')}
+          >
+            <img src={viewerReject} alt="" width="15" height="15" />
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The screen, mounted only once its application is in hand.
+ *
+ * Split from the fetching wrapper below rather than guarding every read: this
+ * half opens each of its dozen pieces of state *from* the record — which stop
+ * the decision panel starts at, which documents are already approved — and
+ * initialisers only run on the first render. A single component would have
+ * seeded them all from an empty record and then never revisited them, so the
+ * agent would be shown "Begin Document Verification" on an application that was
+ * forwarded last week.
+ */
+function ApplicationDetails({ application, onSaved }) {
+  const navigate = useNavigate();
+
+  /* Payment details ships collapsed and the applicant strip open, as drawn. The
+     sections between them are this service's own form steps, so their keys come
+     off the record instead of being written in here. */
+  const [openSections, setOpenSections] = useState(() => ({
     applicant: true,
-    property: true,
     payment: false,
-  });
+    ...Object.fromEntries(application.detailSections.map((section) => [section.id, true])),
+  }));
   const [activeTab, setActiveTab] = useState('documents');
   const [verified, setVerified] = useState(() => application?.verified ?? []);
   const [notes, setNotes] = useState(() => application?.notes ?? []);
@@ -501,8 +778,22 @@ function ApplicationDetailsPage() {
   // the waiting or forwarded screens lands on the right card rather than on
   // "Begin Document Verification".
   const tone = application?.statusTone;
+
+  /* Whether this officer has actually opened the review — not the same as the
+     application being open to one.
+
+     Paying the fee moves the application to `under_verification`, which is what
+     the applicant's tracking rail reads and is true: the file is with an officer
+     now. But nobody has ticked anything yet, and the card must still offer Begin
+     Document Verification. So this reads the stamp the first save writes rather
+     than the status — reached is not started. Past the decision it stops
+     mattering: an approved or queried application was plainly reviewed. */
+  const startedByAgent = (record) =>
+    Boolean(record?.verificationStartedAt) ||
+    ['query', 'waiting', 'approved', 'forwarded', 'rejected'].includes(record?.statusTone);
+
   const [verificationStarted, setVerificationStarted] = useState(() =>
-    ['started', 'query', 'waiting', 'approved', 'forwarded', 'rejected'].includes(tone)
+    startedByAgent(application)
   );
   // A rejected application is closed for good — it never walks on to approved
   // or forwarded. It arrives rejected, or becomes so from the reject dialog.
@@ -516,24 +807,52 @@ function ApplicationDetailsPage() {
   const [queryStatus, setQueryStatus] = useState(() =>
     ['query', 'waiting'].includes(tone) ? tone : null
   );
-  const [paymentSent, setPaymentSent] = useState(false);
-  const [forwarded, setForwarded] = useState(() => tone === 'forwarded');
+  /* Whether the fee is in, and whether the application is finished. Both read
+     off the record — `isPaid` and a `completed` status — rather than being
+     remembered from the click that caused them, so a refresh lands on the same
+     card the agent left. */
+  const [completed, setCompleted] = useState(() => Boolean(application.isCompleted));
+  /* The hand-off to Agent 2. Still browser-only: there is no Agent 2 queue on
+     the backend to hand anything to — no assignment field, no routes — so this
+     stays a local flag rather than pretending a record was moved. */
+  /* Whether it has already gone. Read from the record and never set locally:
+     forwarding navigates to the forwarded queue, and reopening the application
+     afterwards learns it from the server like everything else. */
+  const forwarded = Boolean(application.isForwarded);
+  // The Agent 2 payment request being sent on to the applicant, if any.
+  const [forwardingRequest, setForwardingRequest] = useState(null);
+  /* Save Draft, in flight. One flag for both copies of the button — the design
+     puts one on the not-yet-started card and another on the review card, and
+     they are the same action, so pressing either must disable both. */
+  const [saving, setSaving] = useState(false);
+  /* Any workflow action in flight — a decision, a payment. Separate from
+     `saving` so the Save Draft button can say "Saving…" while a dialog's
+     confirm button says its own thing, but both are disabled by either. */
+  const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [savedAt, setSavedAt] = useState(null);
+
+  // Which document the viewer is showing, if any.
+  const [preview, setPreview] = useState(null);
+
+  /* The records panel, so the contact strip at the top of the page can bring the
+     agent down to the tab it just opened. */
+  const tabsRef = useRef(null);
   const [documentStatus, setDocumentStatus] = useState(() =>
     Object.fromEntries((application?.documents ?? []).map((doc) => [doc.id, doc.status]))
   );
 
   const quickInfo = useMemo(
-    () =>
-      application
-        ? [
-            { label: 'Application ID', value: application.id },
-            { label: 'Department', value: application.department },
-            { label: 'Service', value: application.service },
-            { label: 'Applied Date', value: application.appliedDate },
-            { label: 'SLA Remaining', value: application.time, tone: 'warning' },
-            { label: 'Assigned At', value: application.assignedAt },
-          ]
-        : [],
+    () => [
+      { label: 'Application ID', value: application.id },
+      { label: 'Department', value: application.department },
+      { label: 'Service', value: application.service },
+      { label: 'Applied Date', value: application.appliedDate },
+      /* Counted down from the service's promised turnaround, which is what this
+         line has always claimed to show. */
+      { label: 'SLA Remaining', value: application.slaRemaining, tone: 'warning' },
+      { label: 'Assigned At', value: application.assignedAt },
+    ],
     [application]
   );
 
@@ -541,31 +860,317 @@ function ApplicationDetailsPage() {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));
   };
 
-  const toggleChecklistItem = (id) => {
+  /* Every verification control goes through this: while the applicant still
+     owes the fee it shows the "payment not done yet" popup instead of acting.
+     The server refuses the same work, so this is the explanation, not the lock. */
+  const [paymentBlocked, setPaymentBlocked] = useState(false);
+  const unlessUnpaid =
+    (action) =>
+    async (...args) => {
+      if (application.paymentPending) {
+        /* What this screen holds can be older than the payment: the page was
+           opened before the applicant paid, and the live refresh may lag. Ask the
+           server before refusing — if the fee is in now, take the fresh record
+           and carry on with the click instead of showing a stale popup. */
+        let fresh = null;
+        try {
+          fresh = toApplicationDetail(await queueApi.getQueueApplication(application.applicationId));
+        } catch {
+          // Could not check — keep to what the screen last knew.
+        }
+
+        if (!fresh || fresh.paymentPending) {
+          setPaymentBlocked(true);
+          // null, not false: "stopped before trying", which the Notes tab
+          // must not report as a failed save.
+          return null;
+        }
+
+        onSaved?.(fresh);
+      }
+      return action(...args);
+    };
+
+  const toggleChecklistItem = unlessUnpaid((id) => {
     setVerified((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
     );
+  });
+
+  /**
+   * Open the Communication tab and take the agent down to it.
+   *
+   * The contact strip sits at the top of a long page and the channels it points
+   * at are at the bottom, so switching the tab alone would look like nothing
+   * happened. Scrolling is the other half of the press.
+   *
+   * The scroll runs after the tab has been painted rather than in the same
+   * frame: the panel that opens is taller than the one that closes on most
+   * applications, so measuring before React re-renders lands short.
+   */
+  const openCommunication = () => {
+    setActiveTab('communication');
+
+    requestAnimationFrame(() => {
+      /* `start`, not `nearest`. What has to be on screen is the panel *below*
+         the tab strip — the channels themselves — and `nearest` treats the strip
+         as already in view the moment its top edge is anywhere in the viewport,
+         which on this page it usually is. The agent would press Chat and watch
+         nothing move. Putting the strip at the top of the viewport is what
+         brings the panel under it fully into view. */
+      /* Animated, unless the agent has asked their system for less motion —
+         scrollIntoView does not consult that preference on its own. */
+      const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+      tabsRef.current?.scrollIntoView({
+        behavior: still ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
   };
 
-  const setDocument = (id, status) => {
+  const setDocument = unlessUnpaid((id, status) => {
     setDocumentStatus((current) => ({ ...current, [id]: status }));
+  });
+
+  /**
+   * Save Draft — everything the agent has changed on this screen, in one PATCH.
+   *
+   * The screen's state is the draft: the checklist as it is ticked right now, the
+   * verdict currently showing on every document, and any note typed since the
+   * last save. `toVerificationDraft` is what turns that into the body the API
+   * accepts, so nothing here has to know the server's own vocabulary.
+   *
+   * Re-seeds from the response rather than assuming the send worked. The
+   * server's copy is the one that survives a refresh, and the notes come back
+   * with their real ids and timestamps — which is also what stops the next save
+   * appending them a second time.
+   */
+  /**
+   * Re-reads the outcome flags off whatever the server just returned.
+   *
+   * Shared by every path that applies a fresh record: a query only closes once
+   * every document it named is verified, and that can happen from a Save Draft
+   * on this very card — approving the re-uploaded documents and saving is the
+   * one and only thing that resolves it. Without this, the card would keep
+   * showing Query Raised / Waiting for Customer forever, because nothing else
+   * ever tells it the query is gone.
+   */
+  const applyStatusFlags = (saved) => {
+    const next = saved.statusTone;
+
+    // Same rule as the seed above — see startedByAgent.
+    if (startedByAgent(saved)) setVerificationStarted(true);
+    setRejected(next === 'rejected');
+    setApproved(['approved', 'forwarded'].includes(next));
+    setQueryStatus(['query', 'waiting'].includes(next) ? next : null);
+    setCompleted(Boolean(saved.isCompleted));
   };
 
-  if (!application) {
-    return (
-      <DashboardLayout>
-        <main className="queue-page application-page">
-          <h1 className="queue-page__title">Application not found</h1>
-          <p className="queue-page__subtitle">The requested application could not be located.</p>
-          <button className="queue-action" type="button" onClick={() => navigate('/assigned-queue')}>
-            Back to queue
-          </button>
-        </main>
-      </DashboardLayout>
-    );
-  }
+  /**
+   * The actual PATCH, shared by every button that saves this card — Save
+   * Draft, and Save Note in the Notes tab below. `notesToSend` is the only
+   * thing that ever differs between callers: Save Draft resends `notes` as
+   * the screen already holds it, Save Note adds the one just typed first —
+   * see toVerificationDraft's own note on why sending the whole checklist
+   * and document map every time is fine either way.
+   */
+  const persistDraft = async (notesToSend) => {
+    // A second press while the first is in flight would save the same work twice
+    // and, on a first save, write two "verification started" timeline entries.
+    if (saving || busy) return false;
 
-  const { applicant, property, payment } = application;
+    setSaving(true);
+    setSaveError(null);
+
+    try {
+      const saved = toApplicationDetail(
+        await queueApi.saveQueueDraft(
+          application.applicationId,
+          toVerificationDraft({ verified, documentStatus, notes: notesToSend })
+        )
+      );
+
+      /* What the server actually stored, not what was sent. */
+      setVerified(saved.verified);
+      setNotes(saved.notes);
+      setDocumentStatus(
+        Object.fromEntries(saved.documents.map((document) => [document.id, document.status]))
+      );
+      applyStatusFlags(saved);
+
+      setSavedAt(new Date());
+
+      // Lifts it to the wrapper so the hero badge, the stepper and Quick Info
+      // read the stored record too.
+      onSaved?.(saved);
+
+      return true;
+    } catch (error) {
+      // Nothing is marked saved on a failure — the screen must not look like it
+      // worked when the record did not change.
+      setSaveError(getErrorMessage(error));
+      setSavedAt(null);
+
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveDraftNow = unlessUnpaid(() => persistDraft(notes));
+
+  /* The Notes tab's own save — appends one note and persists immediately,
+     rather than leaving it sitting in local state until the agent happens to
+     press Save Draft elsewhere on the page (which was the bug: a note typed
+     and "saved" here never actually reached the record, so Agent 2 could
+     never have seen it either). */
+  const addNote = unlessUnpaid((text) => persistDraft([...notes, { text }]));
+
+  /**
+   * Applies whatever the server says the application now is.
+   *
+   * Every workflow action answers with the whole record, so the card it lands
+   * on is the server's decision rather than the panel's guess about what its
+   * own click should have caused. That is the difference between a screen that
+   * survives a refresh and one that only looks like it worked.
+   */
+  const applyRecord = (saved) => {
+    setVerified(saved.verified);
+    setNotes(saved.notes);
+    setDocumentStatus(
+      Object.fromEntries(saved.documents.map((document) => [document.id, document.status]))
+    );
+    applyStatusFlags(saved);
+
+    onSaved?.(saved);
+  };
+
+  /**
+   * One runner for every workflow action.
+   *
+   * They all do the same four things — refuse to double-fire, clear the last
+   * message, call the API, apply what came back — and writing that out five
+   * times is five places for the error handling to be slightly different. A
+   * failure leaves the card exactly as it was: nothing is applied unless the
+   * server confirmed it.
+   */
+  const runAction = async (call) => {
+    if (busy) return false;
+
+    setBusy(true);
+    setSaveError(null);
+
+    try {
+      applyRecord(toApplicationDetail(await call()));
+      setDialog(null);
+
+      return true;
+    } catch (error) {
+      /* The server refuses an approval whose checklist is unfinished or whose
+         documents include a rejected one, and a fee taken on either. Those
+         messages are written for the agent, so they are shown rather than
+         flattened into "something went wrong". */
+      setSaveError(getErrorMessage(error));
+      setSavedAt(null);
+
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* What the screen last committed, for a live refetch to check on landing:
+     a save or action in flight, or a record applied since it set out, means
+     its answer may be older than what is shown. */
+  const liveGuard = useRef(null);
+  useEffect(() => {
+    liveGuard.current = { application, saving, busy };
+  });
+
+  /* Live: whatever changed elsewhere — the applicant paying or re-uploading,
+     Agent 2 asking for more, a new timeline entry — shows up without a reload,
+     and so does the fee arriving when the officer comes back to this tab.
+
+     The server-owned record (badge, payment, documents, requests, timeline) is
+     always taken. The agent's own draft — checklist, document verdicts, notes —
+     is merged part by part: a part still as the last stored record left it
+     takes the server's value, a part the agent has changed keeps theirs. */
+  useLiveRefresh(async () => {
+    if (saving || busy) return;
+
+    const base = application;
+    let fresh;
+    try {
+      fresh = toApplicationDetail(await queueApi.getQueueApplication(base.applicationId));
+    } catch {
+      return; // Keeps what is on screen.
+    }
+
+    const now = liveGuard.current;
+    if (now.saving || now.busy || now.application !== base) return;
+
+    const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    if (same(fresh, base)) return;
+
+    const baseStatus = Object.fromEntries(base.documents.map((doc) => [doc.id, doc.status]));
+
+    setVerified((current) => (same(current, base.verified) ? fresh.verified : current));
+    setNotes((current) => (same(current, base.notes) ? fresh.notes : current));
+    setDocumentStatus((current) =>
+      Object.fromEntries(
+        fresh.documents.map((doc) => [
+          doc.id,
+          doc.id in current && current[doc.id] !== baseStatus[doc.id] ? current[doc.id] : doc.status,
+        ])
+      )
+    );
+    applyStatusFlags(fresh);
+
+    onSaved?.(fresh);
+  }, ['applications']);
+
+  const decide = (payload) =>
+    runAction(() => queueApi.submitDecision(application.applicationId, payload));
+
+  /* Passing Agent 2's request for more money on to the applicant. Agent 1
+     sends the ask; the applicant pays the company, never this officer. */
+  const sendPaymentRequest = async () => {
+    const sent = await runAction(() =>
+      queueApi.forwardPaymentRequest(application.applicationId, forwardingRequest.id)
+    );
+    if (sent) setForwardingRequest(null);
+  };
+
+  /**
+   * Hand it to Agent 2 — the last thing this console does with the application.
+   *
+   * Straight to the forwarded queue on success, because the application is no
+   * longer this officer's to work on and leaving them on its detail page would
+   * invite them to keep trying. On a failure nothing moves: the card stays as it
+   * was and says what the server refused.
+   */
+  const forward = async () => {
+    const moved = await runAction(() =>
+      queueApi.forwardToAgent2(application.applicationId)
+    );
+
+    if (moved) navigate('/forwarded');
+  };
+
+  /* One line under whichever Save Draft button is on screen. Both copies show
+     it, because either could be the one that was pressed. */
+  const saveStatus = saveError ? (
+    <p className="app-save-status app-save-status--error" role="alert">
+      {saveError}
+    </p>
+  ) : savedAt ? (
+    <p className="app-save-status app-save-status--ok" role="status">
+      Draft saved at {savedAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+    </p>
+  ) : null;
+
+  const { applicant, payment } = application;
   const verifiedCount = verified.length;
   const progressPercent = Math.round((verifiedCount / CHECKLIST_ITEMS.length) * 100);
 
@@ -690,16 +1295,52 @@ function ApplicationDetailsPage() {
           </div>
 
           <div className="app-hero__actions">
-            {CONTACT_ACTIONS.map((action) => (
-              <button
-                className={`app-contact-button app-contact-button--${action.id}`}
-                type="button"
-                key={action.id}
-              >
-                <img src={action.icon} alt="" width="11.247" height="11.247" />
-                {action.label}
-              </button>
-            ))}
+            {CONTACT_ACTIONS.map((action) => {
+              if (CONTACT_CHANNELS.includes(action.id)) {
+                return (
+                  <button
+                    className={`app-contact-button app-contact-button--${action.id}`}
+                    type="button"
+                    key={action.id}
+                    onClick={() => openCommunication()}
+                  >
+                    <img src={action.icon} alt="" width="11.247" height="11.247" />
+                    {action.label}
+                  </button>
+                );
+              }
+
+              /* Download and Print both act on the department's own
+                 certificate, once the case has one — there is nothing to
+                 download or print about an application still in progress,
+                 which is what leaves both disabled until then rather than
+                 handing back an empty file or an unstyled printout of this
+                 page's own chrome. */
+              return application.certificateUrl ? (
+                <a
+                  className={`app-contact-button app-contact-button--${action.id}`}
+                  key={action.id}
+                  href={application.certificateUrl}
+                  download={action.id === 'download' ? (application.certificateName ?? true) : undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <img src={action.icon} alt="" width="11.247" height="11.247" />
+                  {action.label}
+                </a>
+              ) : (
+                <button
+                  className={`app-contact-button app-contact-button--${action.id}`}
+                  type="button"
+                  key={action.id}
+                  disabled
+                  title="No certificate on this application yet"
+                >
+                  <img src={action.icon} alt="" width="11.247" height="11.247" />
+                  {action.label}
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -722,35 +1363,45 @@ function ApplicationDetailsPage() {
               ]}
             />
 
-            <DetailSection
-              icon={sectionProperty}
-              title="Property Details"
-              isOpen={openSections.property}
-              onToggle={() => toggleSection('property')}
-              fields={[
-                { label: 'Survey No.', value: property.surveyNo },
-                { label: 'Plot No.', value: property.plotNo },
-                { label: 'Total Area', value: property.totalArea },
-                { label: 'Built-up Area', value: property.builtUpArea },
-                { label: 'Property Type', value: property.propertyType },
-                { label: 'Zone', value: property.zone },
-              ]}
-            />
+            {/* What the citizen actually filled in, in the steps the service
+                asked it in. The design drew this as one "Property Details"
+                block because the mock-up was a property-tax application; the
+                catalogue is every service, so the section titles and the fields
+                inside them come from the record. Same component, same styling,
+                same collapsing behaviour — only the content is no longer
+                assumed. */}
+            {application.detailSections.map((section) => (
+              <DetailSection
+                key={section.id}
+                icon={sectionProperty}
+                title={section.title}
+                isOpen={openSections[section.id]}
+                onToggle={() => toggleSection(section.id)}
+                fields={section.fields}
+              />
+            ))}
 
             <DetailSection
               icon={sectionPayment}
               title="Payment Details"
               isOpen={openSections.payment}
               onToggle={() => toggleSection('payment')}
+              /* The receipt as the applicant's payment left it. "Due Date" is
+                 gone from this list because nothing records one — the fee falls
+                 due the moment an officer has the application — and a row that
+                 could only ever be a dash was taking the place of the four that
+                 carry real answers. */
               fields={[
-                { label: 'Status', value: payment.status },
-                { label: 'Amount', value: payment.amount },
-                { label: 'Due Date', value: payment.dueDate },
                 { label: 'Payment Mode', value: payment.mode },
+                { label: 'Payment Status', value: payment.status },
+                { label: 'Transaction ID', value: payment.transactionId },
+                { label: 'Payment Date', value: payment.paidOn },
+                { label: 'Receipt', value: payment.receipt },
+                { label: 'Amount', value: payment.amount },
               ]}
             />
 
-            <section className="app-tabs" aria-label="Application records">
+            <section className="app-tabs" aria-label="Application records" ref={tabsRef}>
               <div className="app-tabs__bar" role="tablist" aria-label="Application records">
                 {TABS.map((tab) => (
                   <button
@@ -797,12 +1448,42 @@ function ApplicationDetailsPage() {
                               {DOCUMENT_STATUS_LABEL[status]}
                             </span>
 
-                            <button className="app-doc__icon-button" type="button" title="Preview">
+                            <button
+                              className="app-doc__icon-button"
+                              type="button"
+                              title={
+                                document.previewUrl
+                                  ? `Preview ${document.fileName}`
+                                  : 'Not uploaded yet'
+                              }
+                              onClick={() => setPreview(document)}
+                            >
                               <img src={docView} alt="Preview" width="13.12" height="13.12" />
                             </button>
-                            <button className="app-doc__icon-button" type="button" title="Download">
-                              <img src={docDownload} alt="Download" width="13.12" height="13.12" />
-                            </button>
+
+                            {/* Downloading is navigation to the file, so it is a
+                                link — and it is simply absent while there is no
+                                file, rather than a control that does nothing.
+                                `download` is a hint the browser drops on a
+                                cross-origin file; it then opens instead, which
+                                is the same review the agent wanted. */}
+                            {document.previewUrl ? (
+                              <a
+                                className="app-doc__icon-button"
+                                href={document.previewUrl}
+                                download={document.fileName}
+                                target="_blank"
+                                rel="noreferrer"
+                                title={`Download ${document.fileName}`}
+                              >
+                                <img
+                                  src={docDownload}
+                                  alt="Download"
+                                  width="13.12"
+                                  height="13.12"
+                                />
+                              </a>
+                            ) : null}
 
                             <button
                               className="app-doc__decision app-doc__decision--approve"
@@ -829,12 +1510,7 @@ function ApplicationDetailsPage() {
 
                 {activeTab === 'timeline' ? <Timeline entries={application.timeline} /> : null}
 
-                {activeTab === 'notes' ? (
-                  <Notes
-                    notes={notes}
-                    onAdd={(note) => setNotes((current) => [...current, note])}
-                  />
-                ) : null}
+                {activeTab === 'notes' ? <Notes notes={notes} onAdd={addNote} /> : null}
 
                 {activeTab === 'communication' ? <Communication applicant={applicant} /> : null}
               </div>
@@ -895,51 +1571,64 @@ function ApplicationDetailsPage() {
                 <>
                   <div className="app-outcome app-outcome--approved">
                     <img src={approvedSeal} alt="" width="29.996" height="29.996" />
+                    {/* Same card, same seal — only the wording says which of the
+                        three stops after the decision this application is at. */}
                     <p className="app-outcome__title">
-                      {forwarded ? 'Forwarded to Agent 2' : 'Application Approved'}
+                      {completed
+                        ? 'Application Completed'
+                        : forwarded
+                          ? 'Forwarded to Agent 2'
+                          : 'Application Approved'}
                     </p>
+                    {/* Approving no longer closes the application — it makes it
+                        ready to hand on, which is what the card now says. The
+                        line changes once it has gone. */}
                     <p className="app-outcome__text">
-                      Verification complete. Handed to Agent 2 for final decision.
+                      {completed
+                        ? 'Verification approved and the fee has been collected. This application is closed.'
+                        : forwarded
+                          ? 'Verification complete. Handed to Agent 2 for final decision.'
+                          : application.agent2Missing
+                            ? 'Verification complete. Waiting for an Agent 2 in this department.'
+                            : 'Verification complete. Hand it to Agent 2 for the final decision.'}
                     </p>
                   </div>
 
-                  {/* Both hand-off routes drop away once the file is gone,
-                      leaving only the way to go look at it. */}
-                  {forwarded ? null : (
+                  {/* Every route onwards drops away once the application is
+                      finished, leaving only the way to go look at it. */}
+                  {forwarded || completed ? null : (
                     <>
-                      {paymentSent ? (
-                        <button
-                          className="app-primary-button app-primary-button--done"
-                          type="button"
-                          disabled
-                        >
-                          Payment Done
-                        </button>
-                      ) : (
-                        <button
-                          className="app-primary-button app-primary-button--payment"
-                          type="button"
-                          onClick={() => setDialog('payment')}
-                        >
-                          <img src={forwardPayment} alt="" width="14.992" height="14.992" />
-                          Forward to Payment
-                        </button>
-                      )}
+                      {/* Nobody to hand it to: say so here rather than letting
+                          the click fail, and say the admin knows. */}
+                      {application.agent2Missing ? (
+                        <p className="app-alert app-alert--blocked" role="status">
+                          <img src={alertTriangle} alt="" width="13.12" height="13.12" />
+                          <span>
+                            No Agent 2 is set up for <strong>{application.department}</strong> yet, so
+                            this application cannot be forwarded.{' '}
+                            {application.agent2MissingNotified
+                              ? 'The admin has been notified — you can forward it once an Agent 2 is added.'
+                              : 'The admin will be notified.'}
+                          </span>
+                        </p>
+                      ) : null}
 
-                      {/* Greyed until payment clears — the design keeps the route
-                          on screen either way, so only its state changes. */}
+                      {/* No department fee to send any more — the company pays
+                          Agent 2 from its own wallet — so the hand-off is live
+                          the moment the application is approved, which is what
+                          the server checks too. */}
                       <button
                         className={
-                          paymentSent
+                          application.canForward
                             ? 'app-primary-button app-primary-button--agent2'
                             : 'app-muted-button'
                         }
                         type="button"
-                        disabled={!paymentSent}
-                        onClick={() => setForwarded(true)}
+                        disabled={!application.canForward || busy}
+                        onClick={forward}
                       >
                         <img src={forwardAgent2} alt="" width="14.992" height="14.992" />
-                        Forward to Agent 2
+                        {busy ? 'Forwarding…' : 'Forward to Agent 2'}
                       </button>
                     </>
                   )}
@@ -980,6 +1669,23 @@ function ApplicationDetailsPage() {
                     <img src={decisionReject} alt="" width="14.992" height="14.992" />
                     Reject Application
                   </button>
+
+                  {/* The re-uploaded documents are reviewed from the Documents
+                      tab while the query sits open, and approving them there
+                      is only ever a local tick — this is what persists it and
+                      is the one thing that can resolve the query and bring
+                      this card back to its normal buttons. */}
+                  <button
+                    className="app-secondary-button app-secondary-button--tight"
+                    type="button"
+                    onClick={saveDraftNow}
+                    disabled={saving}
+                  >
+                    <img src={saveDraft} alt="" width="14.992" height="14.992" />
+                    {saving ? 'Saving…' : 'Save Draft'}
+                  </button>
+
+                  {saveStatus}
                 </>
               ) : queryStatus === 'waiting' ? (
                 <>
@@ -995,6 +1701,19 @@ function ApplicationDetailsPage() {
                     <img src={sendReminder} alt="" width="14.992" height="14.992" />
                     Send Reminder
                   </button>
+
+                  {/* Same reason the query template has one — see above. */}
+                  <button
+                    className="app-secondary-button app-secondary-button--tight"
+                    type="button"
+                    onClick={saveDraftNow}
+                    disabled={saving}
+                  >
+                    <img src={saveDraft} alt="" width="14.992" height="14.992" />
+                    {saving ? 'Saving…' : 'Save Draft'}
+                  </button>
+
+                  {saveStatus}
                 </>
               ) : verificationStarted ? (
                 <>
@@ -1015,7 +1734,7 @@ function ApplicationDetailsPage() {
                   <button
                     className="app-decision-button app-decision-button--approve"
                     type="button"
-                    onClick={() => setDialog('approve')}
+                    onClick={unlessUnpaid(() => setDialog('approve'))}
                   >
                     <img src={decisionApprove} alt="" width="14.992" height="14.992" />
                     Approve &amp; Forward
@@ -1042,10 +1761,14 @@ function ApplicationDetailsPage() {
                   <button
                     className="app-secondary-button app-secondary-button--tight"
                     type="button"
+                    onClick={saveDraftNow}
+                    disabled={saving}
                   >
                     <img src={saveDraft} alt="" width="14.992" height="14.992" />
-                    Save Draft
+                    {saving ? 'Saving…' : 'Save Draft'}
                   </button>
+
+                  {saveStatus}
 
                   <p className="app-decision-note">
                     <img src={decisionInfo} alt="" width="13.12" height="13.12" />
@@ -1059,22 +1782,78 @@ function ApplicationDetailsPage() {
                     Verification not started. Click below to begin reviewing documents.
                   </p>
 
+                  {/* Starting a review is a save of an empty one, so it reuses
+                      Save Draft's endpoint rather than adding a second route
+                      that would set the same status. That is what persists the
+                      move to Verification Started and puts the row on the
+                      Pending Verification screen.
+
+                      An outstanding fee does not stand in the way: the applicant
+                      pays it from their own app, and the officer's work carries
+                      on either way. The fee shows in Payment Details and on the
+                      applicant's tracking rail until it lands. */}
                   <button
                     className="app-primary-button"
                     type="button"
-                    onClick={() => setVerificationStarted(true)}
+                    onClick={saveDraftNow}
+                    disabled={saving || busy}
                   >
                     <img src={beginVerification} alt="" width="14.992" height="14.992" />
-                    Begin Document Verification
+                    {saving ? 'Starting…' : 'Begin Document Verification'}
                   </button>
 
-                  <button className="app-secondary-button" type="button">
+                  <button
+                    className="app-secondary-button"
+                    type="button"
+                    onClick={saveDraftNow}
+                    disabled={saving}
+                  >
                     <img src={saveDraft} alt="" width="14.992" height="14.992" />
-                    Save Draft
+                    {saving ? 'Saving…' : 'Save Draft'}
                   </button>
+
+                  {saveStatus}
                 </>
               )}
             </section>
+
+            {application.paymentRequests.length > 0 && (
+              <section className="app-card" aria-label="Payment requests from Agent 2">
+                <h2 className="app-card__title">Payment Requests from Agent 2</h2>
+                <p className="app-payreq__lead">
+                  Agent 2 needs more money to finish this application. Send it to the applicant — they pay
+                  the company from the app.
+                </p>
+
+                <ul className="app-payreq__list">
+                  {application.paymentRequests.map((request) => (
+                    <li className="app-payreq" key={request.id}>
+                      <div className="app-payreq__head">
+                        <span className="app-payreq__amount">{request.amount}</span>
+                        <span className={`app-payreq__stage app-payreq__stage--${request.stage}`}>
+                          {PAYMENT_REQUEST_STAGE[request.stage] ?? request.stage}
+                        </span>
+                      </div>
+                      <p className="app-payreq__reason">{request.reason}</p>
+                      {request.remarks && <p className="app-payreq__remarks">{request.remarks}</p>}
+                      {request.awaitingAgent1 && (
+                        <button
+                          className="app-primary-button app-primary-button--agent2"
+                          type="button"
+                          disabled={busy}
+                          onClick={() => {
+                            setSaveError(null);
+                            setForwardingRequest(request);
+                          }}
+                        >
+                          Send to Applicant
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <section className="app-card" aria-label="Quick info">
               <h2 className="app-card__title">Quick Info</h2>
@@ -1097,15 +1876,22 @@ function ApplicationDetailsPage() {
           </aside>
         </div>
 
+        {preview ? (
+          <DocumentPreview
+            document={preview}
+            onDecide={setDocument}
+            onClose={() => setPreview(null)}
+          />
+        ) : null}
+
         {dialog === 'approve' ? (
           <ConfirmDialog
             title="Approve Application?"
-            confirmLabel="Yes, Approve"
+            confirmLabel={busy ? 'Approving…' : 'Yes, Approve'}
+            busy={busy}
+            error={saveError}
             onCancel={() => setDialog(null)}
-            onConfirm={() => {
-              setApproved(true);
-              setDialog(null);
-            }}
+            onConfirm={() => decide({ action: 'approve' })}
           >
             <p className="app-modal__text">
               You are about to approve <strong>{application.id}</strong>
@@ -1119,14 +1905,16 @@ function ApplicationDetailsPage() {
         {dialog === 'reject' ? (
           <ConfirmDialog
             title="Reject Application?"
-            confirmLabel="Confirm Reject"
+            confirmLabel={busy ? 'Rejecting…' : 'Confirm Reject'}
+            /* The applicant is told this reason and nothing else, so the server
+               requires one — held here as well, to refuse the click rather than
+               make the round trip that would be refused. */
+            busy={busy || !rejectReason}
+            error={saveError}
             icon={modalReject}
             tone="reject"
             onCancel={() => setDialog(null)}
-            onConfirm={() => {
-              setRejected(true);
-              setDialog(null);
-            }}
+            onConfirm={() => decide({ action: 'reject', reason: rejectReason })}
           >
             <p className="app-modal__text">
               This action cannot be undone. The applicant will be notified.
@@ -1157,37 +1945,165 @@ function ApplicationDetailsPage() {
 
         {dialog === 'query' ? (
           <QueryDialog
+            busy={busy}
+            error={saveError}
             onCancel={() => setDialog(null)}
-            onSend={() => {
-              setQueryStatus('query');
-              setDialog(null);
-            }}
+            onSend={(query) => decide({ action: 'query', ...query })}
           />
         ) : null}
 
-        {dialog === 'payment' ? (
+        {paymentBlocked ? (
+          <PaymentPendingDialog application={application} onClose={() => setPaymentBlocked(false)} />
+        ) : null}
+
+        {forwardingRequest ? (
           <ConfirmDialog
-            title="Forwarded For Payment"
-            confirmLabel="Send"
-            onCancel={() => setDialog(null)}
-            onConfirm={() => {
-              setPaymentSent(true);
-              // Nothing is left outstanding once payment is away, so the
-              // checklist closes out with it.
-              setVerified(CHECKLIST_ITEMS.map((item) => item.id));
-              setDialog(null);
-            }}
+            title="Send Payment Request"
+            confirmLabel={busy ? 'Sending…' : 'Send to Applicant'}
+            busy={busy}
+            error={saveError}
+            onCancel={() => setForwardingRequest(null)}
+            onConfirm={sendPaymentRequest}
           >
             <p className="app-modal__text">
-              You are about to approve <strong>{application.id}</strong>
+              Ask the applicant to pay <strong>{forwardingRequest.amount}</strong> more on{' '}
+              <strong>{application.id}</strong>
             </p>
             <p className="app-modal__text app-modal__text--tight">
-              for <strong>{application.name}</strong>. This will forward the application to Payment
+              {forwardingRequest.reason}. They are notified and pay from the app, into the company
+              wallet; the company passes it on to Agent 2.
             </p>
           </ConfirmDialog>
         ) : null}
       </main>
     </DashboardLayout>
+  );
+}
+
+/**
+ * Fetches the one application the route names, then hands it to the screen.
+ *
+ * The id in the path is the record's own, which is what the queue table
+ * navigates with — not the APP-… number shown on screen. The server scopes the
+ * read to the signed-in agent, so another agent's application answers 404 and
+ * not 403: telling the two apart would confirm that the id exists.
+ *
+ * Three empty states, because what to do about each differs — wait, retry, or
+ * go back — and one spinner-shaped message for all three would say none of it.
+ */
+function ApplicationDetailsPage() {
+  const navigate = useNavigate();
+  const { applicationId } = useParams();
+
+  const [application, setApplication] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+
+  const [reloadToken, setReloadToken] = useState(0);
+  const reload = () => setReloadToken((token) => token + 1);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // The message has to change when the request starts, not when it finishes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- see above
+    setLoading(true);
+    setLoadError(null);
+
+    queueApi
+      .getQueueApplication(applicationId)
+      .then((record) => {
+        if (cancelled) return;
+
+        setApplication(toApplicationDetail(record));
+      })
+      .catch((error) => {
+        if (cancelled) return;
+
+        setLoadError(getErrorMessage(error));
+        setApplication(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    /* Guards against a slower earlier request landing after a newer one — an
+       agent clicking two rows in quick succession would otherwise be shown the
+       first application on the second one's URL. */
+    return () => {
+      cancelled = true;
+    };
+  }, [applicationId, reloadToken]);
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <main className="queue-page application-page">
+          <nav className="app-breadcrumb" aria-label="Breadcrumb">
+            <Link className="app-breadcrumb__back" to="/assigned-queue">
+              <img src={breadcrumbBack} alt="" width="13.12" height="13.12" />
+              Assigned Queue
+            </Link>
+          </nav>
+          <h1 className="queue-page__title">Loading application…</h1>
+          <p className="queue-page__subtitle">Fetching the full record and its documents.</p>
+        </main>
+      </DashboardLayout>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <DashboardLayout>
+        <main className="queue-page application-page">
+          <nav className="app-breadcrumb" aria-label="Breadcrumb">
+            <Link className="app-breadcrumb__back" to="/assigned-queue">
+              <img src={breadcrumbBack} alt="" width="13.12" height="13.12" />
+              Assigned Queue
+            </Link>
+          </nav>
+          <h1 className="queue-page__title">This application could not be loaded</h1>
+          <p className="queue-page__subtitle" role="alert">
+            {loadError}
+          </p>
+          <button className="queue-action" type="button" onClick={reload}>
+            Try again
+          </button>
+        </main>
+      </DashboardLayout>
+    );
+  }
+
+  if (!application) {
+    return (
+      <DashboardLayout>
+        <main className="queue-page application-page">
+          <h1 className="queue-page__title">Application not found</h1>
+          <p className="queue-page__subtitle">
+            It is not in your queue — it may have been reassigned or closed.
+          </p>
+          <button
+            className="queue-action"
+            type="button"
+            onClick={() => navigate('/assigned-queue')}
+          >
+            Back to queue
+          </button>
+        </main>
+      </DashboardLayout>
+    );
+  }
+
+  /* Keyed on the record, so moving between two applications remounts the screen
+     rather than carrying the first one's decision state onto the second. A save
+     replaces this copy in place — same key, so the screen keeps the tab and the
+     sections the agent had open while the badge and the stepper catch up. */
+  return (
+    <ApplicationDetails
+      key={application.applicationId}
+      application={application}
+      onSaved={setApplication}
+    />
   );
 }
 

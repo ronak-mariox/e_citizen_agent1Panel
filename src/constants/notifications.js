@@ -9,6 +9,11 @@ export const NOTIFICATION_TYPES = [
   { id: 'customer', label: 'Customer Reply', tone: 'customer' },
   { id: 'sla', label: 'SLA', tone: 'sla' },
   { id: 'system', label: 'System Alerts', tone: 'system' },
+  /* An Agent 2 reaching back about a case this panel forwarded to them —
+     backend NOTIFICATION_TYPE.PROCESSING (see contactAgent1). Shares the
+     Assignments badge rather than a bespoke one: it is the same "work on a
+     case moved" idea, just moving the other way. */
+  { id: 'processing', label: 'Case Updates', tone: 'assignment' },
 ];
 
 export const NOTIFICATIONS = [

@@ -1,9 +1,9 @@
 import trendUp from '../../assets/icons/dashboard/trend-up.svg';
 import trendDown from '../../assets/icons/dashboard/trend-down.svg';
 
-export function StatCard({ icon, accent, value, title, subtitle, trend }) {
+export function StatCard({ icon, accent, value, title, subtitle, trend, onClick }) {
   return (
-    <button className="stat-card" type="button">
+    <button className="stat-card" type="button" onClick={onClick} disabled={!onClick}>
       <span className="stat-card__top">
         <span className="stat-card__icon" style={{ backgroundColor: accent }}>
           <img src={icon} alt="" width="18.749" height="18.749" />

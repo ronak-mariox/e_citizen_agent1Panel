@@ -350,6 +350,12 @@
   border-color: #e9d4ff;
 }
 
+/* Download/Print before the application has a certificate to act on. */
+.app-contact-button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
 /* -------------------------------------------------------------- columns -- */
 
 .app-columns {
@@ -844,6 +850,13 @@
   cursor: not-allowed;
 }
 
+.app-note-composer__error {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-danger);
+}
+
 /* -------------------------------------------------------- communication -- */
 
 .app-channels {
@@ -1154,6 +1167,24 @@
   margin-top: 9.375px;
 }
 
+/* The one line under Save Draft — what happened to the last press. Sits in the
+   same column as the buttons above it and borrows the note's type scale, so it
+   reads as part of the card rather than as something bolted onto it. */
+.app-save-status {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-sm);
+  text-align: center;
+}
+
+.app-save-status--ok {
+  color: var(--color-positive);
+}
+
+.app-save-status--error {
+  color: var(--color-logout);
+}
+
 .app-decision-note {
   display: flex;
   align-items: flex-start;
@@ -1396,6 +1427,10 @@
   align-items: center;
   width: 100%;
   max-width: 480px;
+  /* Never taller than the screen — a long dialog scrolls inside its card. */
+  max-height: calc(100dvh - 2 * var(--space-6));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--space-6);
   text-align: center;
   background-color: var(--color-surface);
@@ -1512,6 +1547,180 @@
 .app-modal__card--form {
   align-items: stretch;
   text-align: left;
+}
+
+/* ------------------------------------------------- previewing a document. The
+   one dialog whose content is the file rather than a question about it: a
+   header that names it and carries its tools, a fixed panel holding the file,
+   and the two decisions the reviewer opened it to make.
+
+   Figma: E-Citizen / node 904:912. -- */
+
+.app-modal__card--preview {
+  align-items: stretch;
+  /* The design's own card: 479px of content inside 22.5px padding. Kept narrow
+     on purpose — full size opens in the browser's own viewer, which handles a
+     large scan far better than a box inside a dialog. */
+  width: 100%;
+  max-width: 524px;
+  padding: var(--space-6);
+  text-align: left;
+}
+
+.app-preview__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.app-preview__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 28.125px;
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-preview__meta {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-dash-text);
+}
+
+.app-preview__tools {
+  display: flex;
+  flex: none;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+/* An anchor and a button sit side by side here — opening a file is navigation,
+   closing a dialog is not — so both are told to lay out the same way. */
+.app-preview__tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  background: transparent;
+  border: 0;
+  border-radius: 11.25px;
+  cursor: pointer;
+}
+
+.app-preview__tool:hover {
+  background-color: var(--color-dash-chip);
+}
+
+/* The panel. A fixed height, as drawn — the file is fitted into it rather than
+   the dialog growing to whatever was uploaded. */
+.app-preview__body {
+  display: flex;
+  height: 270px;
+  margin-top: var(--space-5);
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: var(--color-dash-chip);
+  border-radius: var(--radius-md);
+}
+
+/* A scan is portrait and a photograph is landscape; both have to fit inside the
+   panel without deciding which dimension is the constrained one. */
+.app-preview__image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.app-preview__frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* What the design draws in the panel, and what a file the browser will not
+   render falls back to. */
+.app-preview__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 42ch;
+  padding: 0 var(--space-6);
+  text-align: center;
+}
+
+.app-preview__placeholder-title {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: var(--leading-sm);
+  color: var(--color-dash-text);
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-preview__placeholder-note {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-dash-text);
+  /* Drawn faint: it is the caption under the caption. */
+  opacity: 0.6;
+}
+
+/* The <object> fallback, when a PDF cannot be drawn inline. */
+.app-preview__note {
+  margin: 0;
+  padding: var(--space-6);
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-dash-text);
+  text-align: center;
+}
+
+.app-preview__actions {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+/* Two equal halves of the row, whatever their labels are. */
+.app-preview__decision {
+  display: inline-flex;
+  flex: 1;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: center;
+  padding: 9.375px 0;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: var(--leading-sm);
+  color: #ffffff;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-variation-settings: 'opsz' 14;
+}
+
+.app-preview__decision--approve {
+  background-color: var(--color-positive);
+}
+
+.app-preview__decision--reject {
+  background-color: var(--color-logout);
+}
+
+
+/* The footer is a link beside a button, so the anchor has to be told to sit
+   like one — .app-modal__button assumes a <button>'s own layout. */
+.app-modal__actions a.app-modal__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .app-query__head {
@@ -1692,4 +1901,95 @@
 
 .app-query__toggle--on::after {
   left: 16.88px;
+}
+
+/* Payment requests from Agent 2 — the side card Agent 1 passes them on from. */
+.app-payreq__lead {
+  margin: 7.5px 0 11.25px;
+  font-size: 12px;
+  line-height: 18px;
+  color: #64748b;
+}
+
+.app-payreq__list {
+  display: flex;
+  flex-direction: column;
+  gap: 11.25px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-payreq {
+  display: flex;
+  flex-direction: column;
+  gap: 7.5px;
+  padding: 11.25px;
+  border: 0.75px solid #e2e8f0;
+  border-radius: 11.25px;
+}
+
+.app-payreq__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7.5px;
+}
+
+.app-payreq__amount {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.app-payreq__stage {
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  color: #45556c;
+  background-color: #f1f5f9;
+}
+
+.app-payreq__stage--with_you {
+  color: #ca3500;
+  background-color: #fff7ed;
+}
+
+.app-payreq__stage--with_applicant {
+  color: #1447e6;
+  background-color: #eff6ff;
+}
+
+.app-payreq__stage--paid {
+  color: #008236;
+  background-color: #dcfce7;
+}
+
+.app-payreq__reason,
+.app-payreq__remarks {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: #45556c;
+}
+
+.app-payreq__remarks {
+  color: #64748b;
+}
+
+/* "Payment not done yet" — amber, because it is a wait and not a refusal. */
+.app-modal__badge--pending {
+  background-color: #fef3c6;
+}
+
+.app-modal__button--pending {
+  background-color: #e17100;
+}
+
+/* No Agent 2 for this department — the forward is blocked until one exists. */
+.app-alert--blocked {
+  color: #ca3500;
+  background-color: #fff7ed;
+  border-color: #ffd6a7;
 }

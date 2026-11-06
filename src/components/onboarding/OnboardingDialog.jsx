@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import * as onboardingApi from '../../api/onboarding.js';
 import { getErrorMessage } from '../../api/client.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useLiveRefresh } from '../../hooks/useLiveRefresh.js';
 import '../../styles/onboarding.css';
 
 /**
@@ -216,11 +217,15 @@ export function OnboardingDialog() {
     };
   }, []);
 
+  // Bumped by every mutation, so a live refetch never lands over its answer.
+  const runSeq = useRef(0);
+
   /* Every mutation returns the whole checklist, so they all land here. Wrapping
      them in one place is also what keeps two uploads from overlapping: `busy`
      disables every button, and the API replaces per type — two requests racing
      on the same row would leave one file stored and unreferenced. */
   const run = useCallback(async (action) => {
+    runSeq.current += 1;
     setBusy(true);
     setError(null);
 
@@ -272,6 +277,31 @@ export function OnboardingDialog() {
 
       return fresh;
     });
+
+  /* Live: an administrator's verdict on the account shows up, and opens the
+     console, without pressing the recheck button. Silent and skipped while a
+     mutation is in flight; a failure keeps the checklist shown. */
+  useLiveRefresh(async () => {
+    if (busy) return;
+
+    const seq = runSeq.current;
+    try {
+      const fresh = await onboardingApi.getOnboarding();
+      if (seq !== runSeq.current) return;
+
+      setChecklist(fresh);
+      if (fresh.isVerified) {
+        applyUserPatch({
+          documentsVerified: true,
+          verificationStatus: 'verified',
+          onboardingComplete: true,
+          pendingDocuments: [],
+        });
+      }
+    } catch {
+      // The next change or focus asks again.
+    }
+  }, ['agents']);
 
   const rows = checklist?.requiredDocuments ?? [];
   const done = rows.filter((row) => row.documentId && row.status !== 'rejected').length;

@@ -13,6 +13,20 @@ export function initialsOf(name, fallback = 'AG') {
     .join('');
 }
 
+/**
+ * Rupees, no decimals — every amount in this console is a whole rupee.
+ *
+ * The schema keeps money as an integer in paise (backend common_schema.js), so
+ * callers divide before formatting; this only decides how the number reads.
+ */
+export function rupees(amount) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(amount ?? 0);
+}
+
 /** The stored role, as it reads on screen. */
 export const ROLE_LABEL = {
   agent_1: 'Agent 1',

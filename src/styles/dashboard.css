@@ -329,6 +329,38 @@
   color: #ca3500;
 }
 
+/* The queue filters closed applications out, so these are only reached by a
+   caller that asked for them by status — the completed screen's own table. */
+.queue-pill--approved {
+  background-color: #f0fdf4;
+  color: #008236;
+}
+
+.queue-pill--rejected {
+  background-color: #fef2f2;
+  color: #c10007;
+}
+
+/* Nothing to show, and why — pages/AssignedQueuePage.jsx. One row's worth of
+   height rather than a full empty state: the cards above already say the queue
+   is empty, and this only has to say what to do about it. */
+.queue-empty {
+  padding: 28px 20px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.queue-empty--error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #c10007;
+}
+
+
 .queue-pill__dot {
   display: inline-block;
   width: 5.618px;
@@ -765,7 +797,10 @@
   height: var(--icon-size);
 }
 
-.topbar__bell::after {
+/* Was unconditional — every agent saw a red dot whether or not they had
+   anything unread. Now only drawn while Topbar's own unread poll says
+   there is something, via this modifier rather than the bare selector. */
+.topbar__bell--unread::after {
   position: absolute;
   top: 3.75px;
   left: 18.74px;
@@ -922,6 +957,53 @@
   font-size: var(--text-sm);
   line-height: var(--leading-sm);
   color: var(--color-dash-text);
+}
+
+/* A card with nothing in it yet, and the line that says why. Same type scale as
+   a card's own subtitle, so it reads as part of the card rather than as
+   something bolted on. */
+.dash-card__empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
+  margin: 0;
+  padding: var(--space-6);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  color: var(--color-dash-text);
+  text-align: center;
+}
+
+.dash-card__empty--error {
+  color: var(--color-logout);
+}
+
+/* The whole screen failed, not one card. Sits above the tiles, which stay put
+   showing zeroes. */
+.dash-page__error {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  color: var(--color-logout);
+  background-color: #fef2f2;
+  border-radius: var(--radius-md);
+}
+
+.dash-page__retry {
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-logout);
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  cursor: pointer;
 }
 
 .dash-page__refresh {
@@ -1395,6 +1477,26 @@
 
 .status-badge--waiting::before {
   background-color: #ff6900;
+}
+
+/* Closed, one way or the other — only the dashboard's activity list shows
+   these, because they are the two states a working queue filters out. */
+.status-badge--approved {
+  color: #008236;
+  background-color: #f0fdf4;
+}
+
+.status-badge--approved::before {
+  background-color: var(--color-positive);
+}
+
+.status-badge--rejected {
+  color: #c10007;
+  background-color: #fef2f2;
+}
+
+.status-badge--rejected::before {
+  background-color: var(--color-logout);
 }
 
 /* ----------------------------------------------------------- responsive -- */
