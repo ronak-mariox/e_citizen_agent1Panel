@@ -565,6 +565,15 @@ export function toApplicationDetail(application) {
        record, so a reloaded screen offers the button on the same facts the
        server would accept it on. */
     isForwarded: Boolean(application.forwardedAt),
+    /* The department turned it down and Agent 2 sent it back. Shown until it is
+       forwarded again, because the reason is what Agent 1 tells the applicant. */
+    departmentReturn: (() => {
+      const last = application.departmentReturns?.at(-1);
+      const closed = ['completed', 'rejected', 'cancelled'].includes(application.status);
+      return last && !application.forwardedAt && !closed
+        ? { remarks: last.remarks, at: shortDate(last.at), count: application.departmentReturns.length }
+        : null;
+    })(),
     /* Approved and not yet gone — what the server checks. Agent 1 no longer
        sends the department fee: citizens pay the company, and the admin pays
        Agent 2 from the company wallet. */

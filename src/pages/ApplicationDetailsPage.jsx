@@ -1221,6 +1221,20 @@ function ApplicationDetails({ application, onSaved }) {
           <span className="app-breadcrumb__id">{application.id}</span>
         </nav>
 
+        {application.departmentReturn && (
+          <section className="app-returned" role="alert">
+            <p className="app-returned__title">
+              Rejected by the department · {application.departmentReturn.at}
+              {application.departmentReturn.count > 1 && ` · ${application.departmentReturn.count} times`}
+            </p>
+            <p className="app-returned__reason">{application.departmentReturn.remarks}</p>
+            <p className="app-returned__hint">
+              Tell the applicant and raise a query or ask for a re-upload, then approve and forward it
+              again.
+            </p>
+          </section>
+        )}
+
         <section className="app-stepper" aria-label="Application progress">
           <ol className="app-stepper__list">
             {APPLICATION_STEPS.map((step, index) => {

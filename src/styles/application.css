@@ -41,6 +41,36 @@
 
 /* -------------------------------------------------------------- stepper -- */
 
+/* A department rejection sent back by Agent 2 — the reason to pass on. */
+.app-returned {
+  display: grid;
+  gap: var(--space-1, 4px);
+  padding: 11.951px 15.701px;
+  border: 1px solid #ffc9c9;
+  border-radius: 10px;
+  background-color: #fef2f2;
+}
+
+.app-returned p {
+  margin: 0;
+}
+
+.app-returned__title {
+  color: #c10007;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.app-returned__reason {
+  color: #101828;
+  font-size: 14px;
+}
+
+.app-returned__hint {
+  color: #4a5565;
+  font-size: 12px;
+}
+
 .app-stepper {
   display: flex;
   align-items: center;

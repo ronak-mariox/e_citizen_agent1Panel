@@ -56,7 +56,9 @@ export function agentProfileFrom(user) {
     fullName: user?.fullName ?? '',
     employeeId: user?.employeeId ?? '',
     mobile: user?.mobile ?? '',
-    department: user?.department?.name ?? (user?.department ? '—' : 'Not posted yet'),
+    department: user?.allDepartments
+      ? 'All Departments'
+      : user?.department?.name ?? (user?.department ? '—' : 'Not posted yet'),
     level: ROLE_LABEL[user?.role] ?? titleCase(user?.role),
     status: STATUS_LABEL[user?.status] ?? titleCase(user?.status),
   };
