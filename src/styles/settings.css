@@ -301,7 +301,77 @@
   color: var(--color-danger);
 }
 
+.settings-field__success {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--color-positive);
+}
+
 /* Why the fields above cannot be edited, and where to go instead. */
+/* ------------------------------------------------------ assigned services --
+
+   What this posting covers, under the read-only fields and read-only itself.
+   A list rather than another pair of inputs: it is not a value with one answer,
+   and a comma-joined string in a disabled field would be unreadable at four
+   services and unusable at twelve. */
+
+.settings-scope {
+  padding-top: 18.75px;
+  border-top: 1px solid var(--color-dash-border);
+}
+
+.settings-scope__title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: var(--leading-sm);
+  color: var(--color-body);
+  font-variation-settings: 'opsz' 14;
+}
+
+.settings-scope__note {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  line-height: var(--leading-sm);
+  color: var(--color-dash-text);
+}
+
+/* Auto-fit, so one service is not a lonely full-width row and twelve are not a
+   column the length of the page. */
+.settings-scope__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  list-style: none;
+  padding: 0;
+}
+
+.settings-scope__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 11px;
+  border: 1px solid var(--color-dash-border);
+  border-radius: 8px;
+  background-color: var(--color-surface-muted, #f8fafc);
+}
+
+.settings-scope__name {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: var(--leading-xs);
+  color: var(--color-body);
+  overflow-wrap: anywhere;
+}
+
+/* A service the agent is scoped to can still be closed to new applications. */
+.settings-scope__flag {
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: #bb4d00;
+}
+
 .settings-note {
   margin-top: var(--space-5);
   font-size: var(--text-xs);

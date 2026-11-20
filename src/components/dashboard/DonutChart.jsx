@@ -1,4 +1,4 @@
-import { STATUS_DISTRIBUTION } from '../../constants/dashboard.js';
+import { SLICE_COLOR } from '../../constants/dashboard.js';
 
 /* Ring geometry read off the exported Figma arcs: r 56 / 38 on a 160 box, each
    segment ending 2.28deg early to leave the designed gap. */
@@ -29,18 +29,32 @@ function segmentPath(startDegrees, endDegrees) {
   ].join('');
 }
 
-export function DonutChart() {
-  const total = STATUS_DISTRIBUTION.reduce((sum, slice) => sum + slice.value, 0);
+/**
+ * How this agent's applications are spread across the four states.
+ *
+ * @param {Array} data `{ key, label, value }` per slice, from the API. The hue
+ *   is this console's, looked up by key — a colour is a design decision and not
+ *   something the server should be sending.
+ */
+export function DonutChart({ data = [] }) {
+  const slices = data.map((slice) => ({ ...slice, color: SLICE_COLOR[slice.key] ?? '#94a3b8' }));
+  const total = slices.reduce((sum, slice) => sum + slice.value, 0);
 
-  const segments = STATUS_DISTRIBUTION.map((slice, index) => {
-    const preceding = STATUS_DISTRIBUTION.slice(0, index).reduce(
-      (sum, earlier) => sum + earlier.value,
-      0,
-    );
-    const start = (preceding / total) * 360;
-    const sweep = (slice.value / total) * 360;
-    return { ...slice, d: segmentPath(start, start + sweep - PAD_DEGREES) };
-  });
+  /* An agent holding nothing would divide every sweep by zero and put NaN into
+     each arc — which renders as an empty box with no error to explain it. The
+     ring is drawn empty instead, with its legend of zeroes intact, because "you
+     have nothing on" is a real answer and the card has to be able to give it. */
+  const segments = total
+    ? slices.map((slice, index) => {
+        const preceding = slices
+          .slice(0, index)
+          .reduce((sum, earlier) => sum + earlier.value, 0);
+        const start = (preceding / total) * 360;
+        const sweep = (slice.value / total) * 360;
+
+        return { ...slice, d: segmentPath(start, start + sweep - PAD_DEGREES) };
+      })
+    : [];
 
   return (
     <>
@@ -66,7 +80,7 @@ export function DonutChart() {
       </svg>
 
       <div className="donut-legend">
-        {STATUS_DISTRIBUTION.map((slice) => (
+        {slices.map((slice) => (
           <div className="donut-legend__row" key={slice.key}>
             <span className="donut-legend__name">
               <span className="donut-legend__dot" style={{ backgroundColor: slice.color }} />

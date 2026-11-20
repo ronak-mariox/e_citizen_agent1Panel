@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import chevronLeft from '../../assets/icons/dashboard/chevron-left.svg';
 import chevronDown from '../../assets/icons/dashboard/chevron-down.svg';
@@ -8,8 +9,15 @@ import bellIcon from '../../assets/icons/dashboard/bell.svg';
 import profileIcon from '../../assets/icons/settings/tab-profile.svg';
 import { AGENT } from '../../constants/dashboard.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import * as notificationsApi from '../../api/notifications.js';
+import { useLiveRefresh } from '../../hooks/useLiveRefresh.js';
 import { assetUrl } from '../../utils/format.js';
-import { useNavigate } from 'react-router-dom';
+
+/* How often the bell checks for something new. A poll rather than a socket —
+   there is no live channel yet — cheap enough at this interval that it costs
+   nothing to leave a tab open, frequent enough that "unread" does not sit
+   stale for a whole shift. */
+const UNREAD_POLL_MS = 60000;
 
 /** "Ravi Kumar" -> "RK"; falls back to one letter for a single-word name. */
 function initialsOf(name) {
@@ -40,6 +48,36 @@ export function Topbar({ onToggleSidebar }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const accountRef = useRef(null);
+
+  const [unread, setUnread] = useState(0);
+  // A new notification moves the dot at once rather than at the next minute's poll.
+  const [unreadTick, setUnreadTick] = useState(0);
+  useLiveRefresh(() => setUnreadTick((tick) => tick + 1), ['notifications']);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const poll = () => {
+      // A single row is enough — only the bundled `unread` total is read.
+      notificationsApi
+        .listMyNotifications({ limit: 1 })
+        .then((data) => {
+          if (!cancelled) setUnread(data.unread?.total ?? 0);
+        })
+        .catch(() => {
+          // A failed poll should not put a false dot on the bell — leave
+          // whatever was last known rather than guessing.
+        });
+    };
+
+    poll();
+    const timer = setInterval(poll, UNREAD_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [unreadTick]);
 
   // AGENT is the design placeholder; it only shows if the session somehow has
   // no name on it, which the guards make unlikely.
@@ -95,7 +133,12 @@ export function Topbar({ onToggleSidebar }) {
           {formatToday()}
         </p>
 
-        <button className="topbar__bell" type="button" aria-label="Notifications" onClick={()=> navigate('/notifications')}>
+        <button
+          className={unread > 0 ? 'topbar__bell topbar__bell--unread' : 'topbar__bell'}
+          type="button"
+          aria-label={unread > 0 ? `Notifications — ${unread} unread` : 'Notifications'}
+          onClick={() => navigate('/notifications')}
+        >
           <img src={bellIcon} alt="" width="14.992" height="14.992" />
         </button>
 
